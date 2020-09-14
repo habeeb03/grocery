@@ -71,14 +71,14 @@ class RewardController extends Controller
         $currency = DB::table('currency')
                   ->first();
         $cc = DB::table('reward_points')
-            ->where('min_cart_value',">=",$p)
-            ->orderBy("min_cart_value", "asc")
+            ->where('min_cart_value',"<=",$p)
+            ->orderBy("min_cart_value", "DESC")
             ->first();
           $text1 = "You will get ".$cc->reward_point." reward points with successfull checkout of this order.";
          
           $cc2 = DB::table('reward_points')
             ->where('min_cart_value',">",$cc->min_cart_value)
-            ->orderBy("min_cart_value", "asc")
+            ->orderBy("min_cart_value", "ASC")
             ->first();
             
          if($cc2){

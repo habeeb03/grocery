@@ -1,13 +1,7 @@
 @extends('admin.layout.app')
-<style>
-    .btn{
-        height:27px !important;
-    }
-    .material-icons{
-        margin-top:0px !important;
-        margin-bottom:0px !important;
-    }
-</style>
+<script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
+
 @section ('content')
 <div class="container-fluid">
     
@@ -42,16 +36,17 @@
 <div class="card-header card-header-primary">
       <h4 class="card-title ">App Users</h4>
     </div>
-<table class="table">
+<div class="container"> <br> 
+<table class="display" id="myTable">
     <thead>
         <tr>
-            <th class="text-center">#</th>
+            <th>#</th>
             <th>User_name</th>
             <th>User Phone</th>
             <th>User Email</th>
             <th>Registeration Date</th>
             <th>Is Verified</th>
-            <th class="text-right">Active/Block</th>
+            <th>Active/Block/Delete</th>
         </tr>
     </thead>
     <tbody>
@@ -81,6 +76,9 @@
                     <i class="material-icons">check</i>Active
                 </a>
                 @endif
+                 <a href="{{route('del_userfromlist',$user->user_id)}}" rel="tooltip" onclick="return confirm('Are You sure! It will remove all the addresses & orders related to this User.')" class="btn btn-danger">
+                    <i class="material-icons">delete_forever</i>Delete
+                </a>
             </td>
         </tr>
           @php $i++; @endphp
@@ -92,12 +90,17 @@
                   @endif
     </tbody>
 </table>
-<div class="pagination justify-content-end" align="right" style="width:100%;float:right !important">{{$users->links()}}</div>
+</div>  
 </div>
 </div>
 </div>
 </div>
 <div>
     </div>
+    <script>
+        $(document).ready( function () {
+    $('#myTable').DataTable();
+} );
+    </script>
     @endsection
 </div>

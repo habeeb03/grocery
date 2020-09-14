@@ -28,20 +28,11 @@ class AddressController extends Controller
             $landmark = $request->landmark;
             $state = $request->state;
             $pin = $request->pin;
+            $lat = $request->lat;
+            $lng = $request->lng;
             $status= 1;
-            $address = $house_no .",".  $society .",".  $landmark .",".  $city .",".  $state .",". $pin; 
-            $addres = str_replace(" ", "+", $address);
-            $address1 = str_replace("-", "+", $addres);
+       
             $added_at= Carbon::Now();
-         $mapapi = DB::table('map_API')
-                 ->first();
-                 
-        $key = $mapapi->map_api_key;         
-        $response = json_decode(file_get_contents("https://maps.googleapis.com/maps/api/geocode/json?address=".$address1."&key=".$key));
-        
-        
-         $lat = $response->results[0]->geometry->location->lat;
-         $lng = $response->results[0]->geometry->location->lng;
     	    
     	    $insertaddress = DB::table('address')
     						->insert([
@@ -87,10 +78,17 @@ class AddressController extends Controller
     
     public function society(Request $request)
     {
-    $city_id = $request->city_id;
+    $city_name = $request->city_name;
+    $city = ucfirst($city_name);
+    
+   
+    
     $society= DB::table('society')
-         ->where('city_id',$city_id)
+         ->join('city', 'society.city_id','=','city.city_id')
+         ->where('city.city_name',$city)
          ->get();
+         
+    
          
        if(count($society)>0){
                 $message = array('status'=>'1', 'message'=>'Society list','data'=>$society);
@@ -106,11 +104,41 @@ class AddressController extends Controller
    public function show_address(Request $request)
     {
     $user_id = $request->user_id;
+    $store_id = $request->store_id;
+    
+   $store = DB::table('store')
+       ->where('store_id', $store_id)
+       ->first();
+
+       
     $address = DB::table('address')
          ->where('user_id',$user_id)
-         ->get();
+         ->where('select_status','!=',2)
+         ->select('address.*',DB::raw("6371 * acos(cos(radians(".$store->lat . ")) 
+                    * cos(radians(address.lat)) 
+                    * cos(radians(address.lng) - radians(" . $store->lng . ")) 
+                    + sin(radians(" .$store->lat. ")) 
+                    * sin(radians(address.lat))) AS distance"))
+                    ->having('distance','<=',$store->del_range)
+                  ->get();
+    
+	 
          
        if(count($address)>0){
+		   foreach($address as $addresses)
+		   {
+			   $address_id[]=$addresses->address_id;
+		   }
+		    $check = DB::table('address')
+             ->WhereIn('address_id',$address_id)
+		     ->where('select_status',1)
+		     ->get();
+    if(count($check)==0){
+		   $selected =   DB::table('address')
+         ->where('user_id',$user_id)
+         ->where('select_status',1)
+	     ->update(['select_status'=>0]);
+	}
                 $message = array('status'=>'1', 'message'=>'Address list','data'=>$address);
                 return $message;
                             }		
@@ -124,11 +152,17 @@ class AddressController extends Controller
 public function select_address(Request $request)
     {
     $address_id = $request->address_id;
+    $user = DB::table('address')
+         ->where('address_id',$address_id)
+         ->first();
+    $checkuser = $user->user_id;  
+    $select1 = DB::table('address')
+         ->where('user_id',$checkuser)
+         ->update(['select_status'=> 0]);
     $select = DB::table('address')
          ->where('address_id',$address_id)
          ->update(['select_status'=> 1]);
-         
-       if($select){
+         if($select){
                 $message = array('status'=>'1', 'message'=>'Address Selected');
                 return $message;
                             }		
@@ -138,11 +172,42 @@ public function select_address(Request $request)
     	}    
      }     
      
+public function rem_user_address(Request $request)
+    {
+    $address_id = $request->address_id;
+    $checkcart = DB::table('orders')
+               ->where('address_id', $address_id)
+               ->get();
+    if(count($checkcart)==0) {
+        $deladdress= DB::table('address')
+         ->where('address_id',$address_id)
+         ->delete();
+        
+    }  
+    else{
+    $deladdress= DB::table('address')
+         ->where('address_id',$address_id)
+         ->update(['select_status'=>2]);
+    }
+  
+       if($deladdress){
+         
+                $message = array('status'=>'1', 'message'=>'Address Removed');
+                return $message;
+                            }		
+          else{
+                 $message = array('status'=>'0', 'message'=>'Try Again Later');
+	            return $message;
+    	}    
+     }     
+          
      
       
 public function edit_add(Request $request)
     {
            $address_id = $request->address_id;
+           $lat= $request->lat;
+           $lng = $request->lng;
            $user_id = $request->user_id;
             $unselect= DB::table('address')
                      ->where('user_id' ,$user_id)
@@ -163,19 +228,10 @@ public function edit_add(Request $request)
             $state = $request->state;
             $pin = $request->pin;
             $status= 1;
-            $address = $house_no .",".  $society .",".  $landmark .",".  $city .",".  $state .",". $pin; 
-            $addres = str_replace(" ", "+", $address);
-            $address1 = str_replace("-", "+", $addres);
+         
             $added_at= Carbon::Now();
-         $mapapi = DB::table('map_API')
-                 ->first();
-                 
-        $key = $mapapi->map_api_key;         
-        $response = json_decode(file_get_contents("https://maps.googleapis.com/maps/api/geocode/json?address=".$address1."&key=".$key));
-        
-        
-         $lat = $response->results[0]->geometry->location->lat;
-         $lng = $response->results[0]->geometry->location->lng;
+     
+      
     	    
     	    $insertaddress = DB::table('address')
     	                  ->where('address_id', $address_id)

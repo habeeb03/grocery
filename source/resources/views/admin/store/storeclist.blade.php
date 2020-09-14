@@ -1,8 +1,9 @@
 @extends('admin.layout.app')
+<script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
+
 <style>
-    .btn{
-        height:27px !important;
-    }
+  
     .material-icons{
         margin-top:0px !important;
         margin-bottom:0px !important;
@@ -45,7 +46,8 @@
 <div class="card-header card-header-primary">
       <h4 class="card-title ">Store List</h4>
     </div>
-<table class="table">
+<div class="container"> <br> 
+<table class="display" id="myTable">    
     <thead>
         <tr>
             <th class="text-center">#</th>
@@ -93,12 +95,17 @@
                       @endif  
                     </tbody>
 </table>
-<div class="pagination justify-content-end" align="right" style="width:100%;float:right !important">{{$city->links()}}</div>
+</div>
 </div>
 </div>
 </div>
 </div>
 <div>
     </div>
+ <script>
+        $(document).ready( function () {
+    $('#myTable').DataTable();
+} );
+    </script>
     @endsection
 </div>

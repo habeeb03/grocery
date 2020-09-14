@@ -47,7 +47,7 @@ sup {
                         <div class="form-group">
                           <label for="exampleInputName1">MRP</label>
                            <input type="hidden" name="id" value="{{$id}}">
-                          <input type="text" class="form-control" id="exampleInputName1" name="mrp" placeholder="Enter MRP">
+                          <input type="number" step="0.01" class="form-control" id="exampleInputName1" name="mrp" placeholder="Enter MRP">
                         </div>
                       </div>
 
@@ -56,7 +56,7 @@ sup {
                       <div class="col-md-6">
                         <div class="form-group">
                           <label class="bmd-label-floating">Quantity</label>
-                          <input type="text" name="quantity" class="form-control">
+                          <input type="number" name="quantity" class="form-control">
                         </div>
                       </div>
                     </div>
@@ -64,8 +64,8 @@ sup {
                     <div class="row">
                       <div class="col-md-6">
                         <div class="form-group">
-                          <label class="bmd-label-floating">Unit</label>
-                          <input type="text" name="unit" class="form-control">
+                          <label class="bmd-label-floating">Unit (G/KG/Ltrs/Ml)</label>
+                          <input type="text" name="unit" class="form-control" pattern="[A-Za-z]{1-10}" title="KG/G/Ltrs/Ml etc" required>
                         </div>
                       </div>
                     </div>
@@ -74,7 +74,7 @@ sup {
                       <div class="col-md-6">
                         <div class="form-group">
                           <label class="bmd-label-floating">Price</label>
-                          <input type="text" name="price" class="form-control">
+                          <input type="number" step="0.01" name="price" class="form-control">
                         </div>
                       </div>
                     </div>

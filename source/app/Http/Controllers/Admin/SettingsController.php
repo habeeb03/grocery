@@ -13,7 +13,7 @@ class SettingsController extends Controller
      public function app_details(Request $request)
     {
         
-        $title="Edit App Details";
+        $title="Global Settings";
     	 
     	$admin_email=Session::get('bamaAdmin');
     	 $admin= DB::table('admin')
@@ -21,7 +21,11 @@ class SettingsController extends Controller
     	 		   ->first();
     	  $logo = DB::table('tbl_web_setting')
                 ->first();	
-         return view('admin.settings.app_details',compact("admin_email","admin",'title','logo'));
+        $cc = DB::table('country_code')
+            ->first();
+        $currency = DB::table('currency')
+            ->first();  
+         return view('admin.settings.app_details',compact("admin_email","admin",'title','logo','cc','currency'));
       
 
     }
@@ -32,13 +36,15 @@ class SettingsController extends Controller
             $request,
                 [
                     'app_name' => 'required',
+                    'country_code'=>'required'
                 ],
                 [
                     'app_name.required' => 'Enter App Name.',
+                    'country_code.required'=> 'Enter Country Code'
                 ]
         );
         
-        
+        $country_code = $request->country_code;
         $check = DB::table('tbl_web_setting')
                ->first();
         $app_name = $request->app_name;
@@ -83,6 +89,21 @@ class SettingsController extends Controller
             $favicon = $oldapplogo;
         } 
         }
+        
+        $check2 = DB::table('country_code')
+               ->first();
+       if($check2){
+        
+
+        $updatecc = DB::table('country_code')
+                ->update(['country_code'=> $country_code]);
+    
+      }
+      else{
+          $updatecc = DB::table('country_code')
+                ->insert(['country_code'=> $country_code]);
+      } 
+        
       if($check){
         
 
@@ -91,14 +112,20 @@ class SettingsController extends Controller
     
       }
       else{
-          $update = DB::table('settings')
+          $update = DB::table('tbl_web_setting')
                 ->insert(['name'=> $app_name, 'favicon'=>$favicon ]);
       }
      if($update){
         return redirect()->back()->withSuccess('Updated Successfully');
      }
      else{
-         return redirect()->back()->withErrors('Something Wents Wrong');
+          if($updatecc){
+        return redirect()->back()->withSuccess('Updated Successfully');
+             }
+             else{
+                 return redirect()->back()->withErrors('Already Updated');
+             }
+        
      }
     }
     
@@ -107,7 +134,7 @@ class SettingsController extends Controller
      public function msg91(Request $request)
     {
         
-        $title="Edit Msg91";
+        $title="SMS/OTP By";
     	 
     	$admin_email=Session::get('bamaAdmin');
     	 $admin= DB::table('admin')
@@ -116,9 +143,15 @@ class SettingsController extends Controller
     	  $logo = DB::table('tbl_web_setting')
                 ->first();	
                 
-            $msg91 = DB::table('msg91')
+          $msg91 = DB::table('msg91')
                 ->first();   
-         return view('admin.settings.msg91',compact("admin_email","admin",'title','logo','msg91'));
+          $twilio = DB::table('twilio')
+                ->first(); 
+            $smsby = DB::table('smsby')
+                ->first(); 
+            $firebase = DB::table('firebase')
+                      ->first();
+         return view('admin.settings.msg91',compact("admin_email","admin",'title','logo','msg91','twilio','smsby','firebase'));
       
 
     }
@@ -145,21 +178,23 @@ class SettingsController extends Controller
        
     
       if($check){
-        
-
         $update = DB::table('msg91')
-                ->update(['sender_id'=> $sender,'api_key'=> $api_key]);
+                ->update(['sender_id'=> $sender,'api_key'=> $api_key,'active'=>1]);
     
       }
       else{
           $update = DB::table('msg91')
-                ->insert(['sender_id'=> $sender,'api_key'=> $api_key]);
+                ->insert(['sender_id'=> $sender,'api_key'=> $api_key,'active'=>1]);
       }
      if($update){
+         $ue = DB::table('smsby')
+                ->update(['msg91'=> 1,'twilio'=> 0,'status'=>1]);
+         $deactivetwilio = DB::table('twilio')
+                ->update(['active'=>0]);        
         return redirect()->back()->withSuccess('Updated Successfully');
      }
      else{
-         return redirect()->back()->withErrors('Something Wents Wrong');
+         return redirect()->back()->withErrors('Nothing to Update');
      }
     }
     
@@ -225,7 +260,7 @@ class SettingsController extends Controller
  public function fcm(Request $request)
     {
         
-        $title="Update FCM";
+        $title="App Settings";
     	 
     	$admin_email=Session::get('bamaAdmin');
     	 $admin= DB::table('admin')
@@ -235,8 +270,19 @@ class SettingsController extends Controller
                 ->first();	
                 
             $fcm = DB::table('fcm')
-                ->first();   
-         return view('admin.settings.fcm',compact("admin_email","admin",'title','logo','fcm'));
+                ->first();
+            $city=DB::table('time_slot')
+                 ->first();
+                 
+            $del_charge = DB::table('freedeliverycart')
+                 ->first();  
+                 
+             $pymnt = DB::table('payment_via')
+                ->first();
+                
+             $minmax = DB::table('minimum_maximum_order_value')
+                ->first();
+         return view('admin.settings.app_setting',compact("admin_email","admin",'title','logo','fcm','city','del_charge','pymnt','minmax'));
       
 
     }
@@ -288,25 +334,6 @@ class SettingsController extends Controller
      }
     }
   
-  
-     public function del_charge(Request $request)
-    {
-        
-        $title="Delivery Charge Setting";
-    	 
-    	$admin_email=Session::get('bamaAdmin');
-    	 $admin= DB::table('admin')
-    	 		   ->where('admin_email',$admin_email)
-    	 		   ->first();
-    	  $logo = DB::table('tbl_web_setting')
-                ->first();	
-                
-            $del_charge = DB::table('freedeliverycart')
-                ->first();   
-         return view('admin.settings.del_charge',compact("admin_email","admin",'title','logo','del_charge'));
-      
-
-    }
  
     public function updatedel_charge(Request $request)
     {
@@ -352,25 +379,6 @@ class SettingsController extends Controller
      
         
     
-      public function currency(Request $request)
-    {
-        
-        $title="Currency";
-    	 
-    	$admin_email=Session::get('bamaAdmin');
-    	 $admin= DB::table('admin')
-    	 		   ->where('admin_email',$admin_email)
-    	 		   ->first();
-    	  $logo = DB::table('tbl_web_setting')
-                ->where('set_id', '1')
-                ->first();	
-                
-            $currency = DB::table('currency')
-                ->first();   
-         return view('admin.settings.currency',compact("admin_email","admin",'title','logo','currency'));
-      
-
-    }
  
     public function updatecurrency(Request $request)
     {

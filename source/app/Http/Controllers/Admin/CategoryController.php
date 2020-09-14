@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use DB;
 use Session;
+use Carbon\carbon;
 
 class CategoryController extends Controller
 {
@@ -23,11 +24,12 @@ class CategoryController extends Controller
            $category = DB::table('categories')
                     ->leftJoin('categories as catt', 'categories.parent', '=' , 'catt.cat_id')
                     ->select('categories.*', 'catt.title as tttt')
-                    ->paginate(6);
+                    ->get();
                     
-                    
+          $adminTopApp =  DB::table('categories')
+                  ->get();
    
-    return view('admin.category.list', compact('title',"admin", "logo","category"));
+    return view('admin.category.index', compact('title',"admin", "logo","category","adminTopApp"));
     }
 
     
@@ -44,7 +46,7 @@ class CategoryController extends Controller
                 ->first();
            $category = DB::table('categories')
                     ->where('level', 0)
-                    ->orWhere('level', 1)
+                    // ->orWhere('level', 1)
                     ->get();
         
         
@@ -59,6 +61,7 @@ class CategoryController extends Controller
         $slug = str_replace(" ", '-', $category_name);
         $date=date('d-m-Y');
         $desc = $request->desc;
+          
         if($desc==NULL){
           $desc= $category_name; 
         }
@@ -87,8 +90,7 @@ class CategoryController extends Controller
            $level = 0; 
         }
         
-    
-        
+     
         $this->validate(
             $request,
                 [
@@ -125,7 +127,8 @@ class CategoryController extends Controller
                                 'level'=>$level,
                                 'image'=>$category_image,
                                 'status'=>$status,
-                                'description'=>$desc
+                                'description'=>$desc,
+                               
                                
                             ]);
         
@@ -263,6 +266,11 @@ class CategoryController extends Controller
     	$delete=DB::table('categories')->where('cat_id',$request->category_id)->delete();
         if($delete)
         {
+          $deleteproduct=DB::table('product')
+          ->where('cat_id',$request->category_id)->delete();
+          
+          $deletechild=DB::table('categories')
+          ->where('parent',$request->category_id)->delete();  
         return redirect()->back()->withSuccess('Deleted Successfully');
         }
         else
@@ -271,4 +279,7 @@ class CategoryController extends Controller
         }
     }
 
+
+
+ 
 }

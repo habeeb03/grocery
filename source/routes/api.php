@@ -24,16 +24,15 @@ Route::group(['prefix'=>'', ['middleware' => ['XSS']], 'namespace'=>'Api'], func
     Route::get('app_info', 'AppController@app');
     
 	// for user
-	Route::post('register', 'UserController@signUp');
+	Route::post('signup', 'UserController@signUp');
     Route::post('verify_phone', 'UserController@verifyPhone');
+    
     Route::post('forget_password', 'UserController@forgotPassword');
     Route::post('verify_otp', 'UserController@verifyOtp');
     Route::post('change_password', 'UserController@changePassword');
     Route::post('login', 'UserController@login');
     Route::post('checkotp', 'UserController@checkOTP');
     Route::post('myprofile', 'UserController@myprofile');
-    
-    
     //////address///////
     Route::post('add_address', 'AddressController@address');
     Route::get('city', 'AddressController@city');
@@ -41,21 +40,22 @@ Route::group(['prefix'=>'', ['middleware' => ['XSS']], 'namespace'=>'Api'], func
     Route::post('show_address', 'AddressController@show_address');
     Route::post('select_address', 'AddressController@select_address');
     Route::post('edit_address', 'AddressController@edit_add');
+    Route::post('remove_address', 'AddressController@rem_user_address');
     
     ////category product, product_varient///////
     Route::get('cat', 'CategoryController@cat');
     Route::post('varient', 'CategoryController@varient');
-    Route::get('dealproduct', 'CategoryController@dealproduct');
+    Route::post('dealproduct', 'CategoryController@dealproduct');
     
     //orders//
      Route::post('make_an_order', 'OrderController@order');
      Route::post('ongoing_orders', 'OrderController@ongoing');
      Route::get('cancelling_reasons', 'OrderController@cancel_for');
      Route::post('delete_order', 'OrderController@delete_order');
-     Route::get('top_selling', 'OrderController@top_selling');
+     Route::post('top_selling', 'OrderController@top_selling');
      Route::post('checkout', 'OrderController@checkout');
      Route::post('completed_orders', 'OrderController@completed_orders');
-     Route::get('recentselling', 'OrderController@recentselling');
+     Route::post('recentselling', 'OrderController@recentselling');
     
     //coupon//
     Route::post('apply_coupon', 'CouponController@apply_coupon');
@@ -93,7 +93,7 @@ Route::group(['prefix'=>'', ['middleware' => ['XSS']], 'namespace'=>'Api'], func
      
      
      //notification by///
-     Route::get('notifyby', 'NotifybyController@notifyby');
+     Route::post('notifyby', 'NotifybyController@notifyby');
      Route::post('updatenotifyby', 'NotifybyController@updatenotifyby');
      
     //secbanner//
@@ -114,16 +114,34 @@ Route::group(['prefix'=>'', ['middleware' => ['XSS']], 'namespace'=>'Api'], func
       ///profile edit
       Route::post('profile_edit', 'UserController@profile_edit');
       ///////what's new//////
-       Route::get('whatsnew', 'OrderController@whatsnew');
+       Route::post('whatsnew', 'OrderController@whatsnew');
        
        ////rewardlines////
        Route::post('rewardlines', 'RewardController@rewardlines');
        
        //top six categories//
-        Route::get('topsix', 'CategoryController@top_six');
+        Route::post('topsix', 'CategoryController@top_six');
         
          //Delivery fee info////
         Route::get('delivery_info', 'AppController@delivery_info');
+        
+        /////user_block_check////
+         Route::post('user_block_check', 'UserController@user_block_check');
+         
+         Route::post('forgot_password','forgotpasswordController@forgot_password'); 
+         Route::get('checkotponoff','forgotpasswordController@checkotponoff'); 
+         Route::get('pymnt_via','PaymentController@pymnt_via');
+         Route::get('mapby','MapsetController@mapby');
+         Route::get('google_map','MapsetController@google_map');
+         Route::get('mapbox','MapsetController@mapbox');
+         Route::post('homecat', 'CategoryController@homecat');
+         Route::get('countrycode', 'FirebaseController@countrycode');
+         Route::get('firebase', 'FirebaseController@firebase');
+         Route::get('app_notice', 'FirebaseController@app_notice');
+         
+         Route::post('verify_via_firebase', 'UserController@verifyotpfirebase');
+        
+       
       
 });
 
@@ -133,11 +151,12 @@ Route::group(['prefix'=>'store', ['middleware' => ['XSS']], 'namespace'=>'Storea
     Route::post('store_login', 'StoreloginController@store_login');
     Route::post('store_profile', 'StoreloginController@storeprofile');
     
-    Route::post('storeassigned', 'StoreorderController@storeassigned');
-    Route::post('storeunassigned', 'StoreorderController@storeunassigned');
+      Route::post('storetoday_orders', 'StoreorderController@todayorders');
+    Route::post('storenextday_orders', 'StoreorderController@nextdayorders');
     Route::post('productcancelled', 'StoreorderController@productcancelled');
     Route::post('order_rejected', 'StoreorderController@order_rejected');
-    Route::post('storeconfirm', 'StoreorderController@storeconfirm');
+    Route::post('storeconfirm', 'AssignController@storeconfirm');
+    
     
     Route::post('productselect', 'AddproductController@productselect');
     Route::post('storeproducts', 'AddproductController@store_products');
@@ -151,7 +170,15 @@ Route::group(['prefix'=>'store', ['middleware' => ['XSS']], 'namespace'=>'Storea
   Route::post('read_by_store', 'NotificationController@read_by_store');
   Route::post('all_as_read', 'NotificationController@all_as_read');
   Route::post('delete_all_notification', 'NotificationController@delete_all');
-    
+  Route::post('nearbydboys','AssignController@delivery_boy_list');
+  Route::post('cart_invoice','StoreinvoiceController@cart_invoice');
+  
+  ////store registration/////
+   Route::post('regstore', 'RegController@regstore');
+   
+   /////search api
+    Route::post('todayordersearch', 'StoreordersearchController@todaysearch');
+    Route::post('nextdayordersearch', 'StoreordersearchController@nextdaysearch');
 });
 
 
@@ -166,5 +193,21 @@ Route::group(['prefix'=>'driver', ['middleware' => ['XSS']], 'namespace'=>'Drive
     Route::get('map_api', 'MapController@map_api_key');
     Route::post('completed_orders', 'DriverorderController@completed_orders');
     Route::post('update_status', 'DriverstatusController@status');
+     Route::post('todayordsearch', 'SearchordController@todaysearch');
+    Route::post('nextdayordsearch', 'SearchordController@nextdaysearch');
     
 });
+
+
+Route::group(['prefix'=>'', ['middleware' => ['XSS']], 'namespace'=>'Ios'], function(){
+    
+    
+	// for user
+	Route::post('ios_register', 'UserController@ios_signUp');
+	Route::post('ios_com', 'IosordersController@completed_orders');
+	Route::post('ios_on', 'IosordersController@ongoing');
+	Route::post('ios_cart_add', 'CartController@add_to_cart');
+	Route::post('ios_make_order', 'CartController@make_an_order');
+	Route::post('show_cart', 'CartController@show_cart');
+});
+

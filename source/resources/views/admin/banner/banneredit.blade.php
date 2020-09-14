@@ -47,7 +47,7 @@
                         </div>
                         
                         
-                         <img src="{{url($city->banner_image)}}" alt="image" name="" style="width:100px;height:100px; border-radius:50%">
+                         <img src="{{url($city->banner_image)}}" alt="image" name="old_banner" style="width:100px;height:100px; border-radius:50%">
                      <div class="row">
                       <div class="col-md-12">
                         <div class="form">

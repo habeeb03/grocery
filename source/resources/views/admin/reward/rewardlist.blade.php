@@ -1,8 +1,8 @@
 @extends('admin.layout.app')
+<script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
+
 <style>
-    .btn{
-        height:27px !important;
-    }
     .material-icons{
         margin-top:0px !important;
         margin-bottom:0px !important;
@@ -44,15 +44,13 @@
 <div class="card-header card-header-primary">
       <h4 class="card-title ">Reward List</h4>
     </div>
-<table class="table">
+<div class="container">   
+<table class="dsplay" id="myTable">
     <thead>
         <tr>
             <th class="text-center">#</th>
-                      <!--<th>ID</th>-->
                       <th>Cart Value</th>
-                      
                       <th>Reward Points</th>
-                     
                       <th>Action</th>
                     </thead>
                     <tbody>
@@ -64,7 +62,7 @@
                                 <td>{{$rewards->min_cart_value}}</td>
                                 
                                 <td>{{$rewards->reward_point}}</td>
-                                    <td class="td-actions text-left">
+                                    <td>
                                     <a href="{{route('rewardedit', $rewards->reward_id)}}" button type="button" class="btn btn-success">
                                         <i class="material-icons">edit</i>
                                     </button></a>
@@ -72,6 +70,7 @@
                                         <i class="material-icons">close</i>
                                     </button></a>
                                 </td>
+                                
                             </tr>      
                         @php $i++; @endphp
                         @endforeach
@@ -82,12 +81,17 @@
                       @endif  
                     </tbody>
 </table>
-
+</div> 
 </div>
 </div>
 </div>
 </div>
 <div>
     </div>
+    <script>
+        $(document).ready( function () {
+    $('#myTable').DataTable();
+} );
+    </script>
     @endsection
 </div>

@@ -6,206 +6,628 @@ use App\User;
 use App\Partner;
 use App\WebSetting;
 use DB;
+use Twilio\Rest\Client;
 
 trait SendSms {
-
-	public function msgKey()
-    {
-        $msgKey = WebSetting::find(1);
-
-        return $msgKey->value;
-    }
-
-    public function senderId()
-    {
-        $senderId = WebSetting::find(2);
-
-        return $senderId->value;
-    }
-    
-    public function welcomeSms($user_id) {
-        $partners = User::find($user_id);
+    public function ordersuccessfull($cart_id,$prod_name,$price2,$delivery_date,$time_slot,$user_phone) {
+        $countrycode =DB::table('country_code')
+                     ->first();
+        $getInvitationMsg = "Order Successfully Placed: Your order id #".$cart_id." contains of " .$prod_name." of price rs ".$price2. " is placed Successfully.You can expect your item(s) will be delivered on ".$delivery_date." between ".$time_slot.".";
+        $smsby =  DB::table('smsby')
+               ->first();
+    if($smsby->status==1){       
+        if($smsby->msg91==1){       
+         $sms_api_key=  DB::table('msg91')
+    	              ->select('api_key', 'sender_id')
+                      ->first();
+                        $api_key = $sms_api_key->api_key;
+                        $sender_id = $sms_api_key->sender_id;
+                        $getAuthKey = $api_key;
+                        $getSenderId = $sender_id;
+                        
+                        $authKey = $getAuthKey;
+                        $senderId = $getSenderId;
+                        $message1 = $getInvitationMsg;
+                        $route = "4";
+                        $postData = array(
+                            'authkey' => $authKey,
+                            'mobiles' => $countrycode->country_code.$user_phone,
+                            'message' => $message1,
+                            'sender' => $senderId,
+                            'route' => $route
+                        );
         
-        $user_name = $partners->name;
-        $user_phone = $partners->phone;
-        $user_email = $partners->email;
+                        $url="https://control.msg91.com/api/sendhttp.php";
+        
+                        $ch = curl_init();
+                        curl_setopt_array($ch, array(
+                            CURLOPT_URL => $url,
+                            CURLOPT_RETURNTRANSFER => true,
+                            CURLOPT_POST => true,
+                            CURLOPT_POSTFIELDS => $postData
+                        ));
 
-        $message = "Hello ".$user_name. " Welcome to GrowX. Avail the first recharge offer today & get double benefits. Start growing your business";
+                //Ignore SSL certificate verification
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 
-        $postData = array(
-            'authkey' => $this->msgKey(),
-            'mobiles' => $user_phone,
-            'message' => $message,
-            'sender' => $this->senderId(),
-            'route' => 4
+                //get response
+                $output = curl_exec($ch);
+
+                curl_close($ch);
+        }else{
+      
+       $twilio=DB::table('twilio')
+             ->first();
+                           
+       $twilsid = $twilio->twilio_sid;  
+       $twiltoken = $twilio->twilio_token; 
+       $twilphone = $twilio->twilio_phone; 
+         // send SMS
+        // Your Account SID and Auth Token from twilio.com/console
+        $sid = $twilsid;
+        $token = $twiltoken;
+        $client = new Client($sid, $token);
+        $user ='+'.$countrycode->country_code.$user_phone;
+        // Use the client to do fun stuff like send text messages!
+        $client->messages->create(
+            // the number you'd like to send the message to
+            $user,
+            array(
+                // A Twilio phone number you purchased at twilio.com/console
+                'from' => $twilphone,
+                // the body of the text message you'd like to send
+                'body' => $getInvitationMsg
+               
+            )
         );
-
-        $url="https://control.msg91.com/api/sendhttp.php";
-
-        $ch = curl_init();
-            curl_setopt_array($ch, array(
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $postData
-            //,CURLOPT_FOLLOWLOCATION => true
-        ));
-
-        //Ignore SSL certificate verification
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-
-        //get response
-        $output = curl_exec($ch);
-        // if(curl_errno($ch)){
-            // return redirect()->back()->withErrors('Something Wents Wrong');
-        // }
-
-        curl_close($ch);
-            
-        return "send";
-    }
-    
-    public function rechargeSms($user_id, $coins, $price) {
-        $partners = User::find($user_id);
-        
-        $user_name = $partners->name;
-        $user_phone = $partners->phone;
-        $user_email = $partners->email;
-        $coin_amount = $price;
-        $credited_coin = $coins;
-        
-        $message = "Dear ".$user_name." your recharge of $price is successful.Your account is credited with $coins";;
-
-        $postData = array(
-            'authkey' => $this->msgKey(),
-            'mobiles' => $user_phone,
-            'message' => $message,
-            'sender' => $this->senderId(),
-            'route' => 4
-        );
-
-        $url="https://control.msg91.com/api/sendhttp.php";
-
-        $ch = curl_init();
-            curl_setopt_array($ch, array(
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $postData
-            //,CURLOPT_FOLLOWLOCATION => true
-        ));
-
-        //Ignore SSL certificate verification
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-
-        //get response
-        $output = curl_exec($ch);
-        // if(curl_errno($ch)){
-            // return redirect()->back()->withErrors('Something Wents Wrong');
-        // }
-
-        curl_close($ch);
-        
-        return "send";
-    }
-    
-    // public function newLeadSms($lead_city, $lead_category, $lead_req_name, $lead_coin, $lead_budget, $lead_description) {
-    //     $partner = User::where('city', $lead_city)
-    //                             ->where('category', $lead_category)
-    //                             ->get();
-                                
-    //     $lead_name = $lead_req_name;
-    //     $lead_coin = $lead_coin;
-    //     $lead_budget = $lead_budget;
-        
-    //     foreach ($partner as $partners){
-    //         $user_name = $partners->name;
-    //         $user_phone = $partners->phone;
-    //         $user_email = $partners->email;
-
-    //         $message = "Welcome".$user_name;
-
-	   //     $postData = array(
-	   //         'authkey' => $this->msgKey(),
-	   //         'mobiles' => $user_phone,
-	   //         'message' => $message,
-	   //         'sender' => $this->senderId(),
-	   //         'route' => 4
-	   //     );
-
-	   //     $url="https://control.msg91.com/api/sendhttp.php";
-
-	   //     $ch = curl_init();
-	   //         curl_setopt_array($ch, array(
-	   //         CURLOPT_URL => $url,
-	   //         CURLOPT_RETURNTRANSFER => true,
-	   //         CURLOPT_POST => true,
-	   //         CURLOPT_POSTFIELDS => $postData
-	   //         //,CURLOPT_FOLLOWLOCATION => true
-	   //     ));
-
-	   //     //Ignore SSL certificate verification
-	   //     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-	   //     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-
-	   //     //get response
-	   //     $output = curl_exec($ch);
-	   //     // if(curl_errno($ch)){
-	   //         // return redirect()->back()->withErrors('Something Wents Wrong');
-	   //     // }
-
-	   //     curl_close($ch);
-    //     }
-        
-    //     return "send";
-    // }
-    
-    public function profileViewSms() {
-        $partner = User::get();
-        
-        foreach ($partner as $partners){
-            $user_name = $partners->name;
-            $user_phone = $partners->phone;
-            $user_email = $partners->email;
-            $profile_visit = $partners->hit;
-            $company_name = $partners->type;
-
-            $message = "Hello ".$user_name.", your profile has $profile_visit visits. Don't wait, before its late. Download the GrowX App & earn 100X.";
-
-	        $postData = array(
-	            'authkey' => $this->msgKey(),
-	            'mobiles' => $user_phone,
-	            'message' => $message,
-	            'sender' => $this->senderId(),
-	            'route' => 4
-	        );
-
-	        $url="https://control.msg91.com/api/sendhttp.php";
-
-	        $ch = curl_init();
-	            curl_setopt_array($ch, array(
-	            CURLOPT_URL => $url,
-	            CURLOPT_RETURNTRANSFER => true,
-	            CURLOPT_POST => true,
-	            CURLOPT_POSTFIELDS => $postData
-	            //,CURLOPT_FOLLOWLOCATION => true
-	        ));
-
-	        //Ignore SSL certificate verification
-	        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-	        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-
-	        //get response
-	        $output = curl_exec($ch);
-	        // if(curl_errno($ch)){
-	            // return redirect()->back()->withErrors('Something Wents Wrong');
-	        // }
-
-	        curl_close($ch);
         }
-        
-        return request()->json(200, ["message"=>"SMS Sent"]);
     }
+                
+    }
+     public function orderconfirmedsms($cart_id,$user_phone,$orr) {
+        $countrycode =DB::table('country_code')
+                     ->first();     
+        $getInvitationMsg = "Your Order is confirmed: Your order id #".$cart_id." is confirmed by the store.You can expect your item(s) will be delivered on ".$orr->delivery_date." (".$orr->time_slot.").";
+        $smsby =  DB::table('smsby')
+               ->first();
+    if($smsby->status==1){       
+        if($smsby->msg91==1){       
+         $sms_api_key=  DB::table('msg91')
+    	              ->select('api_key', 'sender_id')
+                      ->first();
+                        $api_key = $sms_api_key->api_key;
+                        $sender_id = $sms_api_key->sender_id;
+                        $getAuthKey = $api_key;
+                        $getSenderId = $sender_id;
+                        
+                        $authKey = $getAuthKey;
+                        $senderId = $getSenderId;
+                        $message1 = $getInvitationMsg;
+                        $route = "4";
+                        $postData = array(
+                            'authkey' => $authKey,
+                            'mobiles' => $countrycode->country_code.$user_phone,
+                            'message' => $message1,
+                            'sender' => $senderId,
+                            'route' => $route
+                        );
+        
+                        $url="https://control.msg91.com/api/sendhttp.php";
+        
+                        $ch = curl_init();
+                        curl_setopt_array($ch, array(
+                            CURLOPT_URL => $url,
+                            CURLOPT_RETURNTRANSFER => true,
+                            CURLOPT_POST => true,
+                            CURLOPT_POSTFIELDS => $postData
+                        ));
+
+                //Ignore SSL certificate verification
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+
+                //get response
+                $output = curl_exec($ch);
+
+                curl_close($ch);
+        }else{
+      
+       $twilio=DB::table('twilio')
+             ->first();
+                           
+       $twilsid = $twilio->twilio_sid;  
+       $twiltoken = $twilio->twilio_token; 
+       $twilphone = $twilio->twilio_phone; 
+         // send SMS
+        // Your Account SID and Auth Token from twilio.com/console
+        $sid = $twilsid;
+        $token = $twiltoken;
+        $client = new Client($sid, $token);
+        $user = '+'.$countrycode->country_code.$user_phone;
+        // Use the client to do fun stuff like send text messages!
+        $client->messages->create(
+            // the number you'd like to send the message to
+            $user,
+            array(
+                // A Twilio phone number you purchased at twilio.com/console
+                'from' => $twilphone,
+                // the body of the text message you'd like to send
+                'body' => $getInvitationMsg
+               
+            )
+        );
+        }
+    }
+                
+    }
+     public function delout($cart_id, $prod_name, $price2,$currency,$ord,$user_phone) {
+         $countrycode =DB::table('country_code')
+                     ->first();
+         if($ord->payment_method=="COD" || $ord->payment_method=="cod"){
+                        $getInvitationMsg = "Out For Delivery: Your order id #".$cart_id." contains of " .$prod_name." of price ".$currency->currency_sign." ".$price2. " is Out For Delivery.Get ready with ".$currency->currency_sign." ". $ord->rem_price. " cash.";
+            }
+            else{
+                $getInvitationMsg = "Out For Delivery: Your order id #".$cart_id." contains of " .$prod_name." of price " .$currency->currency_sign." ".$price2. " is Out For Delivery.Get ready."; 
+            }
+        $smsby =  DB::table('smsby')
+               ->first();
+        if($smsby->status==1){         
+        if($smsby->msg91==1){       
+         $sms_api_key=  DB::table('msg91')
+    	              ->select('api_key', 'sender_id')
+                      ->first();
+                        $api_key = $sms_api_key->api_key;
+                        $sender_id = $sms_api_key->sender_id;
+                        $getAuthKey = $api_key;
+                        $getSenderId = $sender_id;
+                        
+                        $authKey = $getAuthKey;
+                        $senderId = $getSenderId;
+                        $message1 = $getInvitationMsg;
+                        $route = "4";
+                        $postData = array(
+                            'authkey' => $authKey,
+                            'mobiles' => $countrycode->country_code.$user_phone,
+                            'message' => $message1,
+                            'sender' => $senderId,
+                            'route' => $route
+                        );
+        
+                        $url="https://control.msg91.com/api/sendhttp.php";
+        
+                        $ch = curl_init();
+                        curl_setopt_array($ch, array(
+                            CURLOPT_URL => $url,
+                            CURLOPT_RETURNTRANSFER => true,
+                            CURLOPT_POST => true,
+                            CURLOPT_POSTFIELDS => $postData
+                        ));
+
+                //Ignore SSL certificate verification
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+
+                //get response
+                $output = curl_exec($ch);
+
+                curl_close($ch);
+        }else{
+      
+       $twilio=DB::table('twilio')
+             ->first();
+                           
+       $twilsid = $twilio->twilio_sid;  
+       $twiltoken = $twilio->twilio_token; 
+       $twilphone = $twilio->twilio_phone; 
+         // send SMS
+        // Your Account SID and Auth Token from twilio.com/console
+        $sid = $twilsid;
+        $token = $twiltoken;
+        $client = new Client($sid, $token);
+        $user = '+'.$countrycode->country_code.$user_phone;
+        // Use the client to do fun stuff like send text messages!
+        $client->messages->create(
+            // the number you'd like to send the message to
+            $user,
+            array(
+                // A Twilio phone number you purchased at twilio.com/console
+                'from' => $twilphone,
+                // the body of the text message you'd like to send
+                'body' => $getInvitationMsg
+               
+            )
+        );
+        }
+        }          
+    }
+    
+     public function delcomsms($cart_id, $prod_name, $price2,$currency,$user_phone) {
+         $countrycode =DB::table('country_code')
+                     ->first();
+         $getInvitationMsg = "Delivery Completed: Your order id #".$cart_id." contains of " .$prod_name." of price " .$currency->currency_sign." ".$price2. " is Delivered Successfully.";
+        $smsby =  DB::table('smsby')
+               ->first();
+               
+        if($smsby->status==1){         
+        if($smsby->msg91==1){       
+         $sms_api_key=  DB::table('msg91')
+    	              ->select('api_key', 'sender_id')
+                      ->first();
+                        $api_key = $sms_api_key->api_key;
+                        $sender_id = $sms_api_key->sender_id;
+                        $getAuthKey = $api_key;
+                        $getSenderId = $sender_id;
+                        
+                        $authKey = $getAuthKey;
+                        $senderId = $getSenderId;
+                        $message1 = $getInvitationMsg;
+                        $route = "4";
+                        $postData = array(
+                            'authkey' => $authKey,
+                            'mobiles' => $countrycode->country_code.$user_phone,
+                            'message' => $message1,
+                            'sender' => $senderId,
+                            'route' => $route
+                        );
+        
+                        $url="https://control.msg91.com/api/sendhttp.php";
+        
+                        $ch = curl_init();
+                        curl_setopt_array($ch, array(
+                            CURLOPT_URL => $url,
+                            CURLOPT_RETURNTRANSFER => true,
+                            CURLOPT_POST => true,
+                            CURLOPT_POSTFIELDS => $postData
+                        ));
+
+                //Ignore SSL certificate verification
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+
+                //get response
+                $output = curl_exec($ch);
+
+                curl_close($ch);
+        }else{
+      
+       $twilio=DB::table('twilio')
+             ->first();
+                           
+       $twilsid = $twilio->twilio_sid;  
+       $twiltoken = $twilio->twilio_token; 
+       $twilphone = $twilio->twilio_phone; 
+         // send SMS
+        // Your Account SID and Auth Token from twilio.com/console
+        $sid = $twilsid;
+        $token = $twiltoken;
+        $client = new Client($sid, $token);
+        $user = '+'.$countrycode->country_code.$user_phone;
+        // Use the client to do fun stuff like send text messages!
+        $client->messages->create(
+            // the number you'd like to send the message to
+            $user,
+            array(
+                // A Twilio phone number you purchased at twilio.com/console
+                'from' => $twilphone,
+                // the body of the text message you'd like to send
+                'body' => $getInvitationMsg
+               
+            )
+        );
+        }
+        }          
+    }
+    
+     public function otpmsg($otpval,$user_phone) {
+        $countrycode =DB::table('country_code')
+                     ->first(); 
+        $getInvitationMsg = "Your OTP is: ".$otpval.".\nNote: Please DO NOT SHARE this OTP with anyone."; 
+        $smsby =  DB::table('smsby')
+               ->first();
+        if($smsby->status==1){         
+        if($smsby->msg91==1){       
+         $sms_api_key=  DB::table('msg91')
+    	              ->select('api_key', 'sender_id')
+                      ->first();
+                        $api_key = $sms_api_key->api_key;
+                        $sender_id = $sms_api_key->sender_id;
+                        $getAuthKey = $api_key;
+                        $getSenderId = $sender_id;
+                        
+                        $authKey = $getAuthKey;
+                        $senderId = $getSenderId;
+                        $message1 = $getInvitationMsg;
+                        $route = "4";
+                        $postData = array(
+                            'authkey' => $authKey,
+                            'mobiles' => $countrycode->country_code.$user_phone,
+                            'message' => $message1,
+                            'sender' => $senderId,
+                            'route' => $route
+                        );
+        
+                        $url="https://control.msg91.com/api/sendhttp.php";
+        
+                        $ch = curl_init();
+                        curl_setopt_array($ch, array(
+                            CURLOPT_URL => $url,
+                            CURLOPT_RETURNTRANSFER => true,
+                            CURLOPT_POST => true,
+                            CURLOPT_POSTFIELDS => $postData
+                        ));
+
+                //Ignore SSL certificate verification
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+
+                //get response
+                $output = curl_exec($ch);
+
+                curl_close($ch);
+        }else{
+      
+       $twilio=DB::table('twilio')
+             ->first();
+                           
+       $twilsid = $twilio->twilio_sid;  
+       $twiltoken = $twilio->twilio_token; 
+       $twilphone = $twilio->twilio_phone; 
+         // send SMS
+        // Your Account SID and Auth Token from twilio.com/console
+        $sid = $twilsid;
+        $token = $twiltoken;
+        $client = new Client($sid, $token);
+        $user = '+'.$countrycode->country_code.$user_phone;
+        // Use the client to do fun stuff like send text messages!
+        $client->messages->create(
+            // the number you'd like to send the message to
+            $user,
+            array(
+                // A Twilio phone number you purchased at twilio.com/console
+                'from' => $twilphone,
+                // the body of the text message you'd like to send
+                'body' => $getInvitationMsg
+               
+            )
+        );
+        }
+        }          
+    }
+
+
+
+//////Store Payout////////
+ public function sendpayoutmsg($amt,$store_phone) {
+         $countrycode =DB::table('country_code')
+                     ->first();
+         $getInvitationMsg = 'Amount of '.$amt.' marked paid successfully against your request.';
+        $smsby =  DB::table('smsby')
+               ->first();
+    if($smsby->status==1){       
+        if($smsby->msg91==1){       
+         $sms_api_key=  DB::table('msg91')
+    	              ->select('api_key', 'sender_id')
+                      ->first();
+                        $api_key = $sms_api_key->api_key;
+                        $sender_id = $sms_api_key->sender_id;
+                        $getAuthKey = $api_key;
+                        $getSenderId = $sender_id;
+                        
+                        $authKey = $getAuthKey;
+                        $senderId = $getSenderId;
+                        $message1 = $getInvitationMsg;
+                        $route = "4";
+                        $postData = array(
+                            'authkey' => $authKey,
+                            'mobiles' => $countrycode->country_code.$store_phone,
+                            'message' => $message1,
+                            'sender' => $senderId,
+                            'route' => $route
+                        );
+        
+                        $url="https://control.msg91.com/api/sendhttp.php";
+        
+                        $ch = curl_init();
+                        curl_setopt_array($ch, array(
+                            CURLOPT_URL => $url,
+                            CURLOPT_RETURNTRANSFER => true,
+                            CURLOPT_POST => true,
+                            CURLOPT_POSTFIELDS => $postData
+                        ));
+
+                //Ignore SSL certificate verification
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+
+                //get response
+                $output = curl_exec($ch);
+
+                curl_close($ch);
+        }else{
+      
+       $twilio=DB::table('twilio')
+             ->first();
+                           
+       $twilsid = $twilio->twilio_sid;  
+       $twiltoken = $twilio->twilio_token; 
+       $twilphone = $twilio->twilio_phone; 
+         // send SMS
+        // Your Account SID and Auth Token from twilio.com/console
+        $sid = $twilsid;
+        $token = $twiltoken;
+        $client = new Client($sid, $token);
+        $user = '+'.$countrycode->country_code.$store_phone;
+        // Use the client to do fun stuff like send text messages!
+        $client->messages->create(
+            // the number you'd like to send the message to
+            $user,
+            array(
+                // A Twilio phone number you purchased at twilio.com/console
+                'from' => $twilphone,
+                // the body of the text message you'd like to send
+                'body' => $getInvitationMsg
+               
+            )
+        );
+        }
+    }
+                
+    }
+    
+    //////Store Payout////////
+ public function sendrejectmsg($cause,$user,$cart_id) {
+        $countrycode =DB::table('country_code')
+                     ->first();
+         $getInvitationMsg = 'Hello '.$user->user_name.', We are cancelling your order ('.$cart_id.') due to following reason:  '.$cause;
+        $smsby =  DB::table('smsby')
+               ->first();
+    if($smsby->status==1){       
+        if($smsby->msg91==1){       
+         $sms_api_key=  DB::table('msg91')
+    	              ->select('api_key', 'sender_id')
+                      ->first();
+                        $api_key = $sms_api_key->api_key;
+                        $sender_id = $sms_api_key->sender_id;
+                        $getAuthKey = $api_key;
+                        $getSenderId = $sender_id;
+                        
+                        $authKey = $getAuthKey;
+                        $senderId = $getSenderId;
+                        $message1 = $getInvitationMsg;
+                        $route = "4";
+                        $postData = array(
+                            'authkey' => $authKey,
+                            'mobiles' => $countrycode->country_code.$user->user_phone,
+                            'message' => $message1,
+                            'sender' => $senderId,
+                            'route' => $route
+                        );
+        
+                        $url="https://control.msg91.com/api/sendhttp.php";
+        
+                        $ch = curl_init();
+                        curl_setopt_array($ch, array(
+                            CURLOPT_URL => $url,
+                            CURLOPT_RETURNTRANSFER => true,
+                            CURLOPT_POST => true,
+                            CURLOPT_POSTFIELDS => $postData
+                        ));
+
+                //Ignore SSL certificate verification
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+
+                //get response
+                $output = curl_exec($ch);
+
+                curl_close($ch);
+        }else{
+      
+       $twilio=DB::table('twilio')
+             ->first();
+                           
+       $twilsid = $twilio->twilio_sid;  
+       $twiltoken = $twilio->twilio_token; 
+       $twilphone = $twilio->twilio_phone; 
+         // send SMS
+        // Your Account SID and Auth Token from twilio.com/console
+        $sid = $twilsid;
+        $token = $twiltoken;
+        $client = new Client($sid, $token);
+        $user = '+'.$countrycode->country_code.$user->user_phone;
+        // Use the client to do fun stuff like send text messages!
+        $client->messages->create(
+            // the number you'd like to send the message to
+            $user,
+            array(
+                // A Twilio phone number you purchased at twilio.com/console
+                'from' => $twilphone,
+                // the body of the text message you'd like to send
+                'body' => $getInvitationMsg
+               
+            )
+        );
+        }
+    }
+                
+    }
+    
+     public function rechargesms($curr,$user_name, $add_to_wallet,$user_phone) {
+         $countrycode =DB::table('country_code')
+                     ->first();
+        $getInvitationMsg = "Hey ".$user_name." :your wallet recharge of ".$curr->currency_sign." ".$add_to_wallet. " is successful.";
+        $smsby =  DB::table('smsby')
+               ->first();
+    if($smsby->status==1){       
+        if($smsby->msg91==1){       
+         $sms_api_key=  DB::table('msg91')
+    	              ->select('api_key', 'sender_id')
+                      ->first();
+                        $api_key = $sms_api_key->api_key;
+                        $sender_id = $sms_api_key->sender_id;
+                        $getAuthKey = $api_key;
+                        $getSenderId = $sender_id;
+                        
+                        $authKey = $getAuthKey;
+                        $senderId = $getSenderId;
+                        $message1 = $getInvitationMsg;
+                        $route = "4";
+                        $postData = array(
+                            'authkey' => $authKey,
+                            'mobiles' => $countrycode->country_code.$user_phone,
+                            'message' => $message1,
+                            'sender' => $senderId,
+                            'route' => $route
+                        );
+        
+                        $url="https://control.msg91.com/api/sendhttp.php";
+        
+                        $ch = curl_init();
+                        curl_setopt_array($ch, array(
+                            CURLOPT_URL => $url,
+                            CURLOPT_RETURNTRANSFER => true,
+                            CURLOPT_POST => true,
+                            CURLOPT_POSTFIELDS => $postData
+                        ));
+
+                //Ignore SSL certificate verification
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+
+                //get response
+                $output = curl_exec($ch);
+
+                curl_close($ch);
+        }else{
+      
+       $twilio=DB::table('twilio')
+             ->first();
+                           
+       $twilsid = $twilio->twilio_sid;  
+       $twiltoken = $twilio->twilio_token; 
+       $twilphone = $twilio->twilio_phone; 
+         // send SMS
+        // Your Account SID and Auth Token from twilio.com/console
+        $sid = $twilsid;
+        $token = $twiltoken;
+        $client = new Client($sid, $token);
+        $user = '+'.$countrycode->country_code.$user_phone;
+        // Use the client to do fun stuff like send text messages!
+        $client->messages->create(
+            // the number you'd like to send the message to
+            $user,
+            array(
+                // A Twilio phone number you purchased at twilio.com/console
+                'from' => $twilphone,
+                // the body of the text message you'd like to send
+                'body' => $getInvitationMsg
+               
+            )
+        );
+        }
+    }
+                
+    }
+    
 }

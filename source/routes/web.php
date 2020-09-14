@@ -11,6 +11,31 @@
 |
 */
 
+Route::get('/clear-cache', function() {
+    Artisan::call('config:cache');
+    return "Cache is cleared";
+});
+
+Route::group(['prefix'=>'web', ['middleware' => ['XSS']], 'namespace'=>'Web'], function(){
+   // for login
+	Route::get('/', 'UserloginController@userlogin')->name('userLogin');
+	Route::post('custloginCheck','UserloginController@logincheck')->name('custLoginCheck');
+	
+	Route::get('sign-up', 'RegisterController@register_user')->name('userregister');
+	Route::post('registration','RegisterController@usersignup')->name('user_registration');
+    Route::post('registration/otp_verify','RegisterController@web_verify_otp')->name('web_verify_otp');
+
+   	Route::group(['middleware'=>'bamaCust'], function(){
+   	Route::get('about', 'WebHomeController@aboutus')->name('webabout');   
+   	Route::get('terms', 'WebHomeController@terms')->name('terms'); 
+	Route::get('home/', 'WebHomeController@web')->name('webhome');
+	Route::get('products', 'AllProductController@products')->name('products');
+    Route::get('products/{cat_id}','AllProductController@cate')->name('catee');
+    Route::get('user/logout', 'UserloginController@logout')->name('userlogout');
+
+	});
+});
+
 Route::group(['prefix'=>'', ['middleware' => ['XSS']], 'namespace'=>'Admin'], function(){
 
 	// for login
@@ -26,26 +51,27 @@ Route::group(['prefix'=>'', ['middleware' => ['XSS']], 'namespace'=>'Admin'], fu
     Route::post('password/update/{id}','ProfileController@adminChangePassword')->name('updatepass');
 	
 	/////settings/////
-      Route::get('app_details','SettingsController@app_details')->name('app_details');
+      Route::get('global_settings','SettingsController@app_details')->name('app_details');
       Route::post('app_details/update','SettingsController@updateappdetails')->name('updateappdetails');
       
       
-      Route::get('msg91','SettingsController@msg91')->name('msg91');
+      Route::get('msgby','SettingsController@msg91')->name('msg91');
       Route::post('msg91/update','SettingsController@updatemsg91')->name('updatemsg91');
+      Route::post('twilio/update','TwilioController@updatetwilio')->name('updatetwilio');
+      Route::post('msgoff','TwilioController@msgoff')->name('msgoff');
       
-      Route::get('map_api','SettingsController@mapapi')->name('mapapi');
-      Route::post('map_api/update','SettingsController@updatemap')->name('updatemap');
+      Route::get('map_api','MapController@mapsettings')->name('mapapi');
+      Route::post('map_api/update','MapController@updategooglemap')->name('updatemap');
+      Route::post('mapbox/update','MapController@updatemapbox')->name('updatemapbox');
       
-      Route::get('fcm','SettingsController@fcm')->name('fcm');
-      Route::post('fcm/update','SettingsController@updatefcm')->name('updatefcm');
+      Route::get('app_settings','SettingsController@fcm')->name('app_settings');
+      Route::post('app_settings/update','SettingsController@updatefcm')->name('updatefcm');
       
-      Route::get('del_charge','SettingsController@del_charge')->name('del_charge');
       Route::post('del_charge/update','SettingsController@updatedel_charge')->name('updatedel_charge');
       
       Route::get('Notification','NotificationController@adminNotification')->name('adminNotification');
       Route::post('Notification/send','NotificationController@adminNotificationSend')->name('adminNotificationSend');
         
-      Route::get('currency','SettingsController@currency')->name('currency');
       Route::post('currency/update','SettingsController@updatecurrency')->name('updatecurrency');
       
       Route::get('Notification_to_store','NotificationController@Notification_to_store')->name('Notification_to_store');
@@ -57,8 +83,8 @@ Route::group(['prefix'=>'', ['middleware' => ['XSS']], 'namespace'=>'Admin'], fu
 	Route::get('category/edit/{category_id}','CategoryController@EditCategory')->name('EditCategory');
  	Route::post('category/update/{category_id}','CategoryController@UpdateCategory')->name('UpdateCategory');
  	Route::get('category/delete/{category_id}','CategoryController@DeleteCategory')->name('DeleteCategory');
- 	
- 	
+ 	 Route::post('change-postion', 'CategoryController@changePostion')->name('change-postion');
+
  	///////Product////////
     Route::get('product/list', 'ProductController@list')->name('productlist');
     Route::get('product/add','ProductController@AddProduct')->name('AddProduct');
@@ -201,15 +227,55 @@ Route::group(['prefix'=>'', ['middleware' => ['XSS']], 'namespace'=>'Admin'], fu
        ////Pending orders/////
       Route::get('admin/pending_orders','AdminorderController@admin_pen_orders')->name('admin_pen_orders');
       Route::get('secretlogin/{id}','SecretloginController@secretlogin')->name('secret-login');
+      Route::post('admin/reject/order/{id}','AdminorderController@rejectorder')->name('admin_reject_order');
+        Route::get('admin/cancelled_orders','AdminorderController@admin_can_orders')->name('admin_can_orders');
+      Route::get('payment_gateway','PayController@payment_gateway')->name('gateway');
+      Route::post('payment_gateway/update','PayController@updatepymntvia')->name('updategateway');
+      
+      
+      ////approval waiting list////
+      Route::get('waiting_for_approval/stores/list','ApprovalController@storeclist')->name('storeapprove');
+      Route::get('approved/stores/{id}','ApprovalController@storeapproved')->name('storeapproved');
+      
+      
+ 	
+ 		/////////////////////for Top Cat///////////////////////
+	    Route::get('top-cat', 'TopAppController@adminTopCat')->name('adminTopCat');
+	    Route::get('top-cat/add', 'TopAppController@adminAddTopCat')->name('adminAddTopCat');
+	    Route::post('top-cat/add/new', 'TopAppController@adminAddNewTopCat')->name('adminAddNewTopCat');
+	    Route::get('top-cat/edit/{id}', 'TopAppController@adminEditTopCat')->name('adminEditTopCat');
+	    Route::post('top-cat/update/{id}', 'TopAppController@adminUpdateTopCat')->name('adminUpdateTopCat');
+	    Route::get('top-cat/delete/{id}','TopAppController@adminTopCatDelete')->name('adminTopCatDelete');
+	    
+	   Route::get('user/delete/{id}', 'UserController@del_user')->name('del_userfromlist'); 
+	   
+	   Route::get('changeStatus', 'HideController@hideproduct')->name('hideprod');
+	   Route::get('app_notice','NoticeController@adminnotice')->name('app_notice');
+       Route::post('app_notice/update','NoticeController@adminupdatenotice')->name('app_noticeupdate');
+       Route::get('updatefirebase', 'HideController@updatefirebase')->name('updatefirebase');
+       /// for bulk upload
+       
+        Route::get('bulk/upload', 'ImportExcelController@bulkup')->name('bulkup');   
+        Route::post('bulk_upload', 'ImportExcelController@import')->name('bulk_upload');
+        Route::post('bulk_v_upload', 'ImportExcelController@import_varients')->name('bulk_v_upload');
+    
 	});
 	
 });
+
+Route::group(['prefix'=>'api','namespace'=>'Api'],function(){
+  Route::post('forgot_password1/{id}','forgotpasswordController@forgot_password1')->name('forgot_password1');
+     Route::get('change_pass/{id}','forgotpasswordController@change_pass')->name('change_pass');
+});
+
 
 
 Route::group(['prefix'=>'store', ['middleware' => ['XSS']], 'namespace'=>'Store'], function(){
 
 	// for login
 	Route::get('/', 'LoginController@storeLogin')->name('storeLogin');
+	Route::get('store_register/', 'StoreregController@register_store')->name('store_register');
+	Route::post('store_registered/', 'StoreregController@store_registered')->name('store_registered');
 	Route::post('loginCheck','LoginController@storeLoginCheck')->name('storeLoginCheck');
 
 	Route::group(['middleware'=>'bamaStore'], function(){
@@ -219,15 +285,29 @@ Route::group(['prefix'=>'store', ['middleware' => ['XSS']], 'namespace'=>'Store'
 	Route::get('product/delete/{id}','ProductController@delete_product')->name('delete_product');
 	Route::post('product/stock/{id}','ProductController@stock_update')->name('stock_update');
 	Route::get('logout', 'LoginController@logout')->name('storelogout');
-	Route::get('orders/unassigned', 'OrderController@orders')->name('storeOrders');
-	Route::get('orders/assigned', 'OrderController@assignedorders')->name('storeassignedorders');
-	Route::get('orders/confirm/{cart_id}','OrderController@confirm_order')->name('store_confirm_order');
+	Route::get('orders/next_day', 'AssignorderController@orders')->name('storeOrders');
+	Route::get('orders/today', 'AssignorderController@assignedorders')->name('storeassignedorders');
+	Route::post('orders/confirm/{cart_id}','AssignorderController@confirm_order')->name('store_confirm_order');
 	Route::get('orders/reject/{cart_id}','OrderController@reject_order')->name('store_reject_order');
 	Route::get('orders/products/cancel/{store_order_id}','OrderController@cancel_products')->name('store_cancel_product');
 	
-	Route::get('products', 'ProductController@st_product')->name('st_product');
+	Route::get('update/stock', 'ProductController@st_product')->name('st_product');
 	Route::get('payout/request', 'PayoutController@payout_req')->name('payout_req');
 	Route::post('payout/request/sent', 'PayoutController@req_sent')->name('payout_req_sent');
+	
+		/////////invoice
+	 Route::get('store/invoice/{cart_id}','InvoiceController@invoice')->name('invoice');
+	 
+	 /////////invoice
+	 Route::get('store/pdf/invoice/{cart_id}','InvoiceController@pdfinvoice')->name('pdfinvoice');
+	 
+	 
+	 Route::get('products/price', 'PriceController@stt_product')->name('stt_product');
+	 Route::post('product/price/update/{id}','PriceController@price_update')->name('price_update');
+	 
+	 Route::get('bulk/upload', 'ImpexcelController@bulkup')->name('bulkuprice');   
+     Route::post('bulk_upload/price', 'ImpexcelController@import')->name('bulk_uploadprice');
+     Route::post('bulk_upload/stock', 'ImpexcelController@importstock')->name('bulk_uploadstock');
 	});
 	
 });

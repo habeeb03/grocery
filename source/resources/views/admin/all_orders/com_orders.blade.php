@@ -1,4 +1,6 @@
 @extends('admin.layout.app')
+<script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
 
 @section ('content')
 <div class="container-fluid">
@@ -33,7 +35,8 @@
 <div class="card-header card-header-primary">
       <h4 class="card-title ">Completed Orders</h4>
     </div>
-<table class="table">
+<div class="container"> <br> 
+<table class="display" id="myTable">
     <thead>
         <tr>
             <th class="text-center">#</th>
@@ -69,7 +72,7 @@
                   @endif
     </tbody>
 </table>
-<div class="pagination justify-content-end" align="right" style="width:100%;float:right !important">{{$ord->links()}}</div>
+</div>
 </div>
 </div>
 </div>
@@ -110,7 +113,7 @@
                             </td>
                             <td>{{$detailss->qty}}</td>
                             <td> 
-                            <p><span style="color:grey">{{$detailss->price * $detailss->qty}}</span></p>
+                            <p><span style="color:grey">{{$detailss->price}}</span></p>
                            </td>
     		          	  @endif
                          </tr>
@@ -130,7 +133,11 @@
         	</div>
         </div>
  @endforeach
-
+ <script>
+        $(document).ready( function () {
+    $('#myTable').DataTable();
+} );
+    </script
 
     @endsection
 </div>

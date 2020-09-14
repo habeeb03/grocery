@@ -7,10 +7,12 @@ use App\Http\Controllers\Controller;
 use DB;
 use Carbon\Carbon;
 use App\Traits\SendMail;
+use App\Traits\SendSms;
 
 class DriverorderController extends Controller
 {
     use SendMail;
+    use SendSms;
     public function completed_orders(Request $request)
      {
          
@@ -61,7 +63,7 @@ class DriverorderController extends Controller
              ->join('store', 'orders.store_id', '=', 'store.store_id')
              ->join('address', 'orders.address_id','=','address.address_id')
              ->join('delivery_boy', 'orders.dboy_id', '=','delivery_boy.dboy_id')
-             ->select('orders.order_status','orders.cart_id','users.user_name', 'users.user_phone', 'orders.delivery_date', 'orders.total_price','orders.delivery_charge','orders.rem_price','orders.payment_status','delivery_boy.boy_name','delivery_boy.boy_phone','orders.time_slot', 'store.address as store_address', 'store.store_name','store.phone_number','store.lat as store_lat','store.lng as store_lng','address.lat as userlat', 'address.lng as userlng', 'delivery_boy.lat as dboy_lat', 'delivery_boy.lng as dboy_lng', 'address.receiver_name', 'address.receiver_phone', 'address.city','address.society','address.house_no','address.landmark','address.state')
+             ->select('orders.order_status','orders.cart_id','users.user_name', 'users.user_phone', 'orders.delivery_date', 'orders.total_price','orders.delivery_charge','orders.rem_price','orders.payment_status','orders.payment_method','delivery_boy.boy_name','delivery_boy.boy_phone','orders.time_slot', 'store.address as store_address', 'store.store_name','store.phone_number','store.lat as store_lat','store.lng as store_lng','address.lat as userlat', 'address.lng as userlng', 'delivery_boy.lat as dboy_lat', 'delivery_boy.lng as dboy_lng', 'address.receiver_name', 'address.receiver_phone', 'address.city','address.society','address.house_no','address.landmark','address.state')
              ->where('orders.order_status','!=', 'completed')
              ->where('orders.store_id','!=',0)
              ->where('orders.dboy_id',$dboy_id)
@@ -73,16 +75,12 @@ class DriverorderController extends Controller
       foreach($ord as $ords){
              $cart_id = $ords->cart_id;    
          $details  =   DB::table('store_orders')
-    	                ->join('product_varient', 'store_orders.varient_id', '=', 'product_varient.varient_id')
-    	                ->join('product','product_varient.product_id', '=', 'product.product_id')
-    	                ->select('product.product_name','product_varient.price','product_varient.mrp','product_varient.unit','product_varient.quantity','product_varient.varient_image','product_varient.description','store_orders.varient_id','store_orders.store_order_id','store_orders.qty',DB::raw('SUM(store_orders.qty) as total_items'))
-    	                ->groupBy('product.product_name','product_varient.price','product_varient.mrp','product_varient.unit','product_varient.quantity','product_varient.varient_image','product_varient.description','store_orders.varient_id','store_orders.store_order_id','store_orders.qty')
-    	               ->where('store_orders.order_cart_id',$cart_id)
-    	               ->where('store_orders.store_approval',1)
-    	               ->sum('store_orders.qty'); 
+    	               ->where('order_cart_id',$cart_id)
+    	               ->where('store_approval',1)
+    	               ->sum('store_orders.qty');
                   
         
-        $data[]=array('user_address'=>$ords->house_no.','.$ords->society.','.$ords->city.','.$ords->landmark.','.$ords->state ,'order_status'=>$ords->order_status,'store_name'=>$ords->store_name, 'store_lat'=>$ords->store_lat, 'store_lng'=>$ords->store_lng, 'store_address'=>$ords->store_address, 'user_lat'=>$ords->userlat, 'user_lng'=>$ords->userlng, 'dboy_lat'=>$ords->dboy_lat, 'dboy_lng'=>$ords->dboy_lng, 'cart_id'=>$cart_id,'user_name'=>$ords->user_name, 'user_phone'=>$ords->user_phone, 'remaining_price'=>$ords->rem_price,'delivery_boy_name'=>$ords->boy_name,'delivery_boy_phone'=>$ords->boy_phone,'delivery_date'=>$ords->delivery_date,'time_slot'=>$ords->time_slot,'total_items'=>$details); 
+        $data[]=array('payment_method'=>$ords->payment_method, 'payment_status'=>$ords->payment_status,'user_address'=>$ords->house_no.','.$ords->society.','.$ords->city.','.$ords->landmark.','.$ords->state ,'order_status'=>$ords->order_status,'store_name'=>$ords->store_name, 'store_lat'=>$ords->store_lat, 'store_lng'=>$ords->store_lng, 'store_address'=>$ords->store_address, 'user_lat'=>$ords->userlat, 'user_lng'=>$ords->userlng, 'dboy_lat'=>$ords->dboy_lat, 'dboy_lng'=>$ords->dboy_lng, 'cart_id'=>$cart_id,'user_name'=>$ords->user_name, 'user_phone'=>$ords->user_phone, 'remaining_price'=>$ords->rem_price,'delivery_boy_name'=>$ords->boy_name,'delivery_boy_phone'=>$ords->boy_phone,'delivery_date'=>$ords->delivery_date,'time_slot'=>$ords->time_slot,'total_items'=>$details); 
         }
         }
         else{
@@ -105,7 +103,7 @@ class DriverorderController extends Controller
              ->join('store', 'orders.store_id', '=', 'store.store_id')
              ->join('address', 'orders.address_id','=','address.address_id')
              ->join('delivery_boy', 'orders.dboy_id', '=','delivery_boy.dboy_id')
-             ->select('orders.order_status','orders.cart_id','users.user_name', 'users.user_phone', 'orders.delivery_date', 'orders.total_price','orders.delivery_charge','orders.rem_price','orders.payment_status','delivery_boy.boy_name','delivery_boy.boy_phone','orders.time_slot', 'store.address as store_address', 'store.store_name','store.phone_number','store.lat as store_lat','store.lng as store_lng','address.lat as userlat', 'address.lng as userlng', 'delivery_boy.lat as dboy_lat', 'delivery_boy.lng as dboy_lng', 'address.receiver_name', 'address.receiver_phone', 'address.city','address.society','address.house_no','address.landmark','address.state','store.phone_number')
+             ->select('orders.order_status','orders.cart_id','users.user_name', 'users.user_phone', 'orders.delivery_date', 'orders.total_price','orders.delivery_charge','orders.rem_price','orders.payment_status','orders.payment_method','delivery_boy.boy_name','delivery_boy.boy_phone','orders.time_slot', 'store.address as store_address', 'store.store_name','store.phone_number','store.lat as store_lat','store.lng as store_lng','address.lat as userlat', 'address.lng as userlng', 'delivery_boy.lat as dboy_lat', 'delivery_boy.lng as dboy_lng', 'address.receiver_name', 'address.receiver_phone', 'address.city','address.society','address.house_no','address.landmark','address.state','store.phone_number')
              ->where('orders.order_status','!=', 'completed')
              ->where('orders.store_id','!=',0)
              ->where('orders.dboy_id',$dboy_id)
@@ -117,15 +115,11 @@ class DriverorderController extends Controller
       foreach($ord as $ords){
              $cart_id = $ords->cart_id;    
          $details  =   DB::table('store_orders')
-    	                ->join('product_varient', 'store_orders.varient_id', '=', 'product_varient.varient_id')
-    	                ->join('product','product_varient.product_id', '=', 'product.product_id')
-    	                ->select('product.product_name','product_varient.price','product_varient.mrp','product_varient.unit','product_varient.quantity','product_varient.varient_image','product_varient.description','store_orders.varient_id','store_orders.store_order_id','store_orders.qty',DB::raw('SUM(store_orders.qty) as total_items'))
-    	                ->groupBy('product.product_name','product_varient.price','product_varient.mrp','product_varient.unit','product_varient.quantity','product_varient.varient_image','product_varient.description','store_orders.varient_id','store_orders.store_order_id','store_orders.qty')
-    	               ->where('store_orders.order_cart_id',$cart_id)
-    	               ->where('store_orders.store_approval',1)
+    	               ->where('order_cart_id',$cart_id)
+    	               ->where('store_approval',1)
     	               ->sum('store_orders.qty');
        
-        $data[]=array('user_address'=>$ords->house_no.','.$ords->society.','.$ords->city.','.$ords->landmark.','.$ords->state , 'order_status'=>$ords->order_status,'store_name'=>$ords->store_name,'store_phone'=>$ords->phone_number, 'store_lat'=>$ords->store_lat, 'store_lng'=>$ords->store_lng, 'store_address'=>$ords->store_address, 'user_lat'=>$ords->userlat, 'user_lng'=>$ords->userlng, 'dboy_lat'=>$ords->dboy_lat, 'dboy_lng'=>$ords->dboy_lng, 'cart_id'=>$cart_id,'user_name'=>$ords->user_name, 'user_phone'=>$ords->user_phone, 'remaining_price'=>$ords->rem_price,'delivery_boy_name'=>$ords->boy_name,'delivery_boy_phone'=>$ords->boy_phone,'delivery_date'=>$ords->delivery_date,'time_slot'=>$ords->time_slot,'total_items'=>$details); 
+        $data[]=array('payment_method'=>$ords->payment_method,'payment_status'=>$ords->payment_status,'user_address'=>$ords->house_no.','.$ords->society.','.$ords->city.','.$ords->landmark.','.$ords->state , 'order_status'=>$ords->order_status,'store_name'=>$ords->store_name,'store_phone'=>$ords->phone_number, 'store_lat'=>$ords->store_lat, 'store_lng'=>$ords->store_lng, 'store_address'=>$ords->store_address, 'user_lat'=>$ords->userlat, 'user_lng'=>$ords->userlng, 'dboy_lat'=>$ords->dboy_lat, 'dboy_lng'=>$ords->dboy_lng, 'cart_id'=>$cart_id,'user_name'=>$ords->user_name, 'user_phone'=>$ords->user_phone, 'remaining_price'=>$ords->rem_price,'delivery_boy_name'=>$ords->boy_name,'delivery_boy_phone'=>$ords->boy_phone,'delivery_date'=>$ords->delivery_date,'time_slot'=>$ords->time_slot,'total_items'=>$details); 
         }
         }
         else{
@@ -146,6 +140,7 @@ class DriverorderController extends Controller
        $ord = DB::table('orders')
             ->where('cart_id',$cart_id)
             ->first();
+        $store_id = $ord->store_id;
         $user_id=$ord->user_id;    
        $var= DB::table('store_orders')
            ->where('order_cart_id', $cart_id)
@@ -158,9 +153,11 @@ class DriverorderController extends Controller
         $user_phone = $ph->user_phone;   
         foreach ($var as $h){
         $varient_id = $h->varient_id;
-        $p = DB::table('product_varient')
+        $p = DB::table('store_products')
+            ->join('product_varient','store_products.varient_id','=','product_varient.varient_id') 
             ->join('product','product_varient.product_id','=','product.product_id')
            ->where('product_varient.varient_id',$varient_id)
+           ->where('store_products.store_id',$store_id)
            ->first();
         $price = $p->price;   
         $order_qty = $h->qty;
@@ -193,45 +190,7 @@ class DriverorderController extends Controller
             $api_key = $sms_api_key->api_key;
             $sender_id = $sms_api_key->sender_id;
                 if($sms_status == 1){
-                    if($ord->payment_method=="COD" || $ord->payment_method=="cod"){
-                        $getInvitationMsg = "Out For Delivery: Your order id #".$cart_id." contains of " .$prod_name." of price ".$currency->currency_sign." ".$price2. " is Out For Delivery.Get ready with ".$currency->currency_sign." ". $ord->rem_price. " cash.";
-                        
-                        
-                    }
-                    else{
-                        $getInvitationMsg = "Out For Delivery: Your order id #".$cart_id." contains of " .$prod_name." of price " .$currency->currency_sign." ".$price2. " is Out For Delivery.Get ready."; 
-                    }
-                        $getAuthKey = $api_key;
-                        $getSenderId = $sender_id;
-                        $authKey = $getAuthKey;
-                        $senderId = $getSenderId;
-                        $message1 = $getInvitationMsg;
-                        $route = "4";
-                        $postData = array(
-                            'authkey' => $authKey,
-                            'mobiles' => $user_phone,
-                            'message' => $message1,
-                            'sender' => $senderId,
-                            'route' => $route
-                        );
-        
-                        $url="https://control.msg91.com/api/sendhttp.php";
-        
-                        $ch = curl_init();
-                        curl_setopt_array($ch, array(
-                            CURLOPT_URL => $url,
-                            CURLOPT_RETURNTRANSFER => true,
-                            CURLOPT_POST => true,
-                            CURLOPT_POSTFIELDS => $postData
-                        ));
-
-                //Ignore SSL certificate verification
-                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                $output = curl_exec($ch);
-
-                curl_close($ch);
-                
+                $successmsg = $this->delout($cart_id, $prod_name, $price2,$currency,$ord,$user_phone);
                 }
                 
                 //////send app notification////
@@ -351,37 +310,6 @@ class DriverorderController extends Controller
                         $results = json_decode($result);
                         }
                     }
-                        $getAuthKey = $api_key;
-                        $getSenderId = $sender_id;
-                        $authKey = $getAuthKey;
-                        $senderId = $getSenderId;
-                        $message1 = $getInvitationMsg;
-                        $route = "4";
-                        $postData = array(
-                            'authkey' => $authKey,
-                            'mobiles' => $user_phone,
-                            'message' => $message1,
-                            'sender' => $senderId,
-                            'route' => $route
-                        );
-        
-                        $url="https://control.msg91.com/api/sendhttp.php";
-        
-                        $ch = curl_init();
-                        curl_setopt_array($ch, array(
-                            CURLOPT_URL => $url,
-                            CURLOPT_RETURNTRANSFER => true,
-                            CURLOPT_POST => true,
-                            CURLOPT_POSTFIELDS => $postData
-                        ));
-
-                //Ignore SSL certificate verification
-                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                $output = curl_exec($ch);
-
-                curl_close($ch);
-                
                 }
                       /////send mail
             $email = DB::table('notificationby')
@@ -409,9 +337,6 @@ class DriverorderController extends Controller
                     $user_name = $q->user_name;
                          $successmail = $this->deloutMail($cart_id, $prod_name, $price2,$user_email, $user_name,$rem_price);
                     }
-
-                
-                  
                }
     	   $message = array('status'=>'1', 'message'=>'out for delivery');
         	return $message;
@@ -432,6 +357,7 @@ class DriverorderController extends Controller
         $ord = DB::table('orders')
             ->where('cart_id',$cart_id)
             ->first();
+		$store_id=$ord->store_id;
           $user_id = $ord->user_id;  
            if($request->user_signature){
                     $user_signature = $request->user_signature;
@@ -456,9 +382,11 @@ class DriverorderController extends Controller
         $user_phone = $ph->user_phone;   
         foreach ($var as $h){
         $varient_id = $h->varient_id;
-        $p = DB::table('product_varient')
+       $p = DB::table('store_products')
+            ->join('product_varient','store_products.varient_id','=','product_varient.varient_id') 
             ->join('product','product_varient.product_id','=','product.product_id')
            ->where('product_varient.varient_id',$varient_id)
+           ->where('store_products.store_id',$store_id)
            ->first();
         $price = $p->price;   
         $order_qty = $h->qty;
@@ -488,40 +416,8 @@ class DriverorderController extends Controller
             $api_key = $sms_api_key->api_key;
             $sender_id = $sms_api_key->sender_id;
                 if($sms_status == 1){
-                    $getInvitationMsg = "Delivery Completed: Your order id #".$cart_id." contains of " .$prod_name." of price " .$currency->currency_sign." ".$price2. " is Delivered Successfully.";
-                    $getAuthKey = $api_key;
-                    $getSenderId = $sender_id;
-        
-                    $authKey = $getAuthKey;
-                    $senderId = $getSenderId;
-                    $message1 = $getInvitationMsg;
-                    $route = "4";
-                    $postData = array(
-                            'authkey' => $authKey,
-                            'mobiles' => $user_phone,
-                            'message' => $message1,
-                            'sender' => $senderId,
-                            'route' => $route
-                        );
-        
-                    $url="https://control.msg91.com/api/sendhttp.php";
-                    $ch = curl_init();
-                        curl_setopt_array($ch, array(
-                            CURLOPT_URL => $url,
-                            CURLOPT_RETURNTRANSFER => true,
-                            CURLOPT_POST => true,
-                            CURLOPT_POSTFIELDS => $postData
-                        ));
-
-                //Ignore SSL certificate verification
-                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-
-                //get response
-                $output = curl_exec($ch);
-
-                curl_close($ch);
-                
+                    $successmsg = $this->delcomsms($cart_id, $prod_name, $price2,$currency,$user_phone); 
+                   
                 }
                 ////send notification to app///
                 if($sms->app == 1){
@@ -602,6 +498,21 @@ class DriverorderController extends Controller
                     $user_name =$q->user_name;
                     $successmail = $this->delcomMail($cart_id, $prod_name, $price2,$user_email,$user_name); 
                }
+			  ////rewards earned////
+           $checkre =DB::table('reward_points')
+                    ->where('min_cart_value','<=',$ord->total_price)
+                    ->orderBy('min_cart_value','desc')
+                    ->first();
+            if($checkre){       
+           $reward_point = $checkre->reward_point;
+           
+           $inreward = DB::table('users')
+                     ->where('user_id',$user_id)
+                     ->update(['rewards'=>$reward_point]);
+           
+           $cartreward = DB::table('cart_rewards')
+                     ->insert(['cart_id'=>$cart_id, 'rewards'=>$reward_point, 'user_id'=>$user_id]);
+            }
     	   $message = array('status'=>'1', 'message'=>'Delivery Completed');
         	return $message;
     	          }          

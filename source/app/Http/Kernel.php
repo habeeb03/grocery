@@ -63,6 +63,7 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'bamaAdmin' => \App\Http\Middleware\RedirectIfNotAdmin::class,
         'bamaStore' =>\App\Http\Middleware\RedirectIfNotStore::class,
+        'bamaCust' =>\App\Http\Middleware\RedirectIfNotCustomer::class,
     ];
 
     /**

@@ -7,9 +7,11 @@ use App\Http\Controllers\Controller;
 use DB;
 use Carbon\Carbon;
 use App\Traits\SendMail;
+use App\Traits\SendSms;
 
 class WalletController extends Controller
 {
+   use SendSms;
    use SendMail;
    public function walletamount(Request $request)
     {  
@@ -83,42 +85,7 @@ if($recharge_status == 'success'){
               $api_key = $sms_api_key->api_key;
               $sender_id = $sms_api_key->sender_id;
             if($sms_status == 1){
-                $getAuthKey = $api_key;
-                $getSenderId = $sender_id;
-                $getInvitationMsg = "Hey ".$user_name." :your wallet recharge of ".$curr->currency_sign." ".$add_to_wallet. " is successful."; 
-
-                $authKey = $getAuthKey;
-                $senderId = $getSenderId;
-                $message = $getInvitationMsg;
-                $route = "4";
-                $postData = array(
-                    'authkey' => $authKey,
-                    'mobiles' => $user_phone,
-                    'message' => $message,
-                    'sender' => $senderId,
-                    'route' => $route
-                );
-
-                $url="https://control.msg91.com/api/sendhttp.php";
-
-                $ch = curl_init();
-                curl_setopt_array($ch, array(
-                    CURLOPT_URL => $url,
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_POST => true,
-                    CURLOPT_POSTFIELDS => $postData
-                    //,CURLOPT_FOLLOWLOCATION => true
-                ));
-
-                //Ignore SSL certificate verification
-                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-
-                //get response
-                $output = curl_exec($ch);
-
-                curl_close($ch);
-                
+                 $rechargeSms = $this->rechargesms($curr,$user_name, $add_to_wallet,$user_phone);
             }
                     // end sms
                   

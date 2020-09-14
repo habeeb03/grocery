@@ -29,7 +29,7 @@ class FinanceController extends Controller
                            ->select('store.store_id','store.store_name', 'store.phone_number','store.address','store.email','store_earning.paid',DB::raw('SUM(orders.total_price)-SUM(orders.total_price)*(store.admin_share)/100 as sumprice'))
                            ->groupBy('store.store_id','store.store_name', 'store.phone_number','store.address','store.email','store_earning.paid','store.admin_share')
                            ->where('order_status','Completed')
-                           ->paginate(10);
+                           ->get();
                         
     	return view('admin.store.finance', compact('title',"admin", "logo","total_earnings"));
     }

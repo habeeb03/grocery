@@ -24,7 +24,7 @@ return [
     |
     */
 
-    'reporting' => [
+     'reporting' => [
         'anonymize_ips' => true,
         'collect_git_information' => false,
         'report_queries' => true,
@@ -33,7 +33,8 @@ return [
         'report_view_data' => true,
     ],
 
-'send_logs_as_events' => false,
+   'send_logs_as_events' => false,
+
     /*
     |--------------------------------------------------------------------------
     | Reporting Log statements

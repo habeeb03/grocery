@@ -6,11 +6,16 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use DB;
 use Carbon\Carbon;
+use App\Traits\SendSms;
 
 class UserController extends Controller
 {
+    use SendSms;
+    
     public function signUp(Request $request)
     {
+        $firebase = DB::table('firebase')
+                  ->first();
         
         $this->validate(
             $request, 
@@ -39,16 +44,8 @@ class UserController extends Controller
     	$checkUser = DB::table('users')
     					->where('user_phone', $user_phone)
     					->first();
-
-    	if($checkUser && $checkUser->is_verified==1){
-    		$message = array('status'=>'0', 'message'=>'user already registered', 'data'=>[]);
-            return $message;
-    	}
-    	
-    ///////if phone not verified/////	
-    	
-	elseif($checkUser && $checkUser->is_verified==0){
-	                 $delnot= DB::table('notificationby')
+    	if($checkUser && $checkUser->is_verified==0){
+    	 $delnot= DB::table('notificationby')
     						->where('user_id', $checkUser->user_id)
     				     	->delete();
     						
@@ -57,6 +54,20 @@ class UserController extends Controller
     					->delete();
     					
     	    
+    	}				
+        $smsby = DB::table('smsby')
+              ->first();
+        if($smsby->status==1 && $firebase->status==0){      
+        // check for otp verify
+    	if($checkUser && $checkUser->is_verified==1){
+    		$message = array('status'=>'0', 'message'=>'user already registered', 'data'=>[]);
+            return $message;
+    	}
+    	
+    ///////if phone not verified/////	
+    	
+	elseif($checkUser && $checkUser->is_verified==0){
+	          
     	   if($request->user_image){
             $user_image = $request->user_image;
             $user_image = str_replace('data:image/png;base64,', '', $user_image);
@@ -98,49 +109,9 @@ class UserController extends Controller
                     $otpval .= $chars[mt_rand(0, strlen($chars)-1)];
                 }
                 
-                $sms_api_key=  DB::table('msg91')
-                	              ->select('api_key', 'sender_id')
-                                  ->first();
-                $api_key = $sms_api_key->api_key;
-                $sender_id = $sms_api_key->sender_id;
-    
-                $getAuthKey = $api_key;
-                $getSenderId = $sender_id;
-                $getInvitationMsg = "Your OTP is: ".$otpval.".\nNote: Please DO NOT SHARE this OTP with anyone."; 
-    
-                $authKey = $getAuthKey;
-                $mobileNumber = $user_phone;
-                $senderId = $getSenderId;
-                $message = $getInvitationMsg;
-                $route = "4";
-                $postData = array(
-                    'authkey' => $authKey,
-                    'mobiles' => $mobileNumber,
-                    'message' => $message,
-                    'sender' => $senderId,
-                    'route' => $route
-                );
-    
-                $url="https://control.msg91.com/api/sendhttp.php";
-    
-                $ch = curl_init();
-                curl_setopt_array($ch, array(
-                    CURLOPT_URL => $url,
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_POST => true,
-                    CURLOPT_POSTFIELDS => $postData
-                    //,CURLOPT_FOLLOWLOCATION => true
-                ));
-    
-                //Ignore SSL certificate verification
-                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-    
-                //get response
-                $output = curl_exec($ch);
-    
-                curl_close($ch);
-    
+                
+                $otpmsg = $this->otpmsg($otpval,$user_phone);
+                
                 $updateOtp = DB::table('users')
                                 ->where('user_phone', $user_phone)
                                 ->update(['otp_value'=>$otpval]);
@@ -149,12 +120,13 @@ class UserController extends Controller
 	        	return $message;
 	    	}
 	    	else{
-	    		$message = array('status'=>'0', 'message'=>'Password is wrong');
+	    		$message = array('status'=>'0', 'message'=>'Something went wrong');
 	        return $message;
 	    	}  
     	}
     	 ///////new user/////	
     	else{
+    	    
        if($request->user_image){
             $user_image = $request->user_image;
             $user_image = str_replace('data:image/png;base64,', '', $user_image);
@@ -196,48 +168,7 @@ class UserController extends Controller
                     $otpval .= $chars[mt_rand(0, strlen($chars)-1)];
                 }
                 
-                $sms_api_key=  DB::table('msg91')
-                	              ->select('api_key', 'sender_id')
-                                  ->first();
-                $api_key = $sms_api_key->api_key;
-                $sender_id = $sms_api_key->sender_id;
-    
-                $getAuthKey = $api_key;
-                $getSenderId = $sender_id;
-                $getInvitationMsg = "Your OTP is: ".$otpval.".\nNote: Please DO NOT SHARE this OTP with anyone."; 
-    
-                $authKey = $getAuthKey;
-                $mobileNumber = $user_phone;
-                $senderId = $getSenderId;
-                $message = $getInvitationMsg;
-                $route = "4";
-                $postData = array(
-                    'authkey' => $authKey,
-                    'mobiles' => $mobileNumber,
-                    'message' => $message,
-                    'sender' => $senderId,
-                    'route' => $route
-                );
-    
-                $url="https://control.msg91.com/api/sendhttp.php";
-    
-                $ch = curl_init();
-                curl_setopt_array($ch, array(
-                    CURLOPT_URL => $url,
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_POST => true,
-                    CURLOPT_POSTFIELDS => $postData
-                    //,CURLOPT_FOLLOWLOCATION => true
-                ));
-    
-                //Ignore SSL certificate verification
-                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-    
-                //get response
-                $output = curl_exec($ch);
-    
-                curl_close($ch);
+               $otpmsg = $this->otpmsg($otpval,$user_phone);
     
                 $updateOtp = DB::table('users')
                                 ->where('user_phone', $user_phone)
@@ -247,17 +178,153 @@ class UserController extends Controller
 	        	return $message;
 	    	}
 	    	else{
-	    		$message = array('status'=>'0', 'message'=>'Password is wrong');
+	    		$message = array('status'=>'0', 'message'=>'Something went wrong');
 	        return $message;
 	    	}
     	}
+        }
+        
+        elseif($firebase->status==1){
+        if($checkUser && $checkUser->is_verified==1){
+    		$message = array('status'=>'0', 'message'=>'user already registered');
+            return $message;
+    	}
+    	else{
+    	     if($request->user_image){
+            $user_image = $request->user_image;
+            $user_image = str_replace('data:image/png;base64,', '', $user_image);
+            $fileName = str_replace(" ", "-", $user_image);
+            $fileName = date('dmyHis').'user_image'.'.'.'png';
+            $fileName = str_replace(" ", "-", $fileName);
+            \File::put(public_path(). '/images/user/' . $fileName, base64_decode($user_image));
+            $user_image = 'images/user/'.$fileName;
+             }
+            else{
+                $user_image = 'N/A';
+                }
+        
+    		$insertUser = DB::table('users')
+    						->insertGetId([
+    							'user_name'=>$user_name,
+    							'user_email'=>$user_email,
+    							'user_phone'=>$user_phone,
+    							'user_image'=>$user_image,
+    							'user_password'=>$user_password,
+    							'device_id'=>$device_id,
+    							'reg_date'=>$created_at,
+    							'is_verified'=>0,
+                                'otp_value'=>NULL
+    						]);
+    						
+            	$Userdetails = DB::table('users')
+    					->where('user_phone', $user_phone)
+    					->first();
+    		if($insertUser){
+    		     DB::table('notificationby')
+    						->insert(['user_id'=> $insertUser,
+    						'sms'=> '1',
+    						'app'=> '1',
+    						'email'=> '1']);
+    			$message = array('status'=>'2', 'message'=>'Otp sent', 'data'=>$Userdetails);
+                return $message;			
+             	}
+            }
+        }
+        
+        else{
+        if($checkUser && $checkUser->is_verified==1){
+    		$message = array('status'=>'0', 'message'=>'user already registered');
+            return $message;
+    	}
+    	else{
+    	     if($request->user_image){
+            $user_image = $request->user_image;
+            $user_image = str_replace('data:image/png;base64,', '', $user_image);
+            $fileName = str_replace(" ", "-", $user_image);
+            $fileName = date('dmyHis').'user_image'.'.'.'png';
+            $fileName = str_replace(" ", "-", $fileName);
+            \File::put(public_path(). '/images/user/' . $fileName, base64_decode($user_image));
+            $user_image = 'images/user/'.$fileName;
+             }
+            else{
+                $user_image = 'N/A';
+                }
+        
+    		$insertUser = DB::table('users')
+    						->insertGetId([
+    							'user_name'=>$user_name,
+    							'user_email'=>$user_email,
+    							'user_phone'=>$user_phone,
+    							'user_image'=>$user_image,
+    							'user_password'=>$user_password,
+    							'device_id'=>$device_id,
+    							'reg_date'=>$created_at,
+    							'is_verified'=>1,
+                                'otp_value'=>NULL
+    						]);
+    						
+            	$Userdetails = DB::table('users')
+    					->where('user_phone', $user_phone)
+    					->first();
+    		if($insertUser){
+    		     DB::table('notificationby')
+    						->insert(['user_id'=> $insertUser,
+    						'sms'=> '1',
+    						'app'=> '1',
+    						'email'=> '1']);
+    			$message = array('status'=>'2', 'message'=>'Login Successfully', 'data'=>$Userdetails);
+                return $message;			
+             	}
+            }
+        }
     }
     
-    public function verifyPhone(Request $request)
+    public function verifyotpfirebase(Request $request)
+    {
+        $phone = $request->user_phone;
+        $status = $request->status;
+        
+        $smsby = DB::table('smsby')
+              ->first();
+    
+        // check for otp verify
+        $getUser = DB::table('users')
+                    ->where('user_phone', $phone)
+                    ->first();
+                    
+        if($getUser){
+            
+            if($status == "success"){
+                // verify phone
+                $getUser = DB::table('users')
+                            ->where('user_phone', $phone)
+                            ->update(['is_verified'=>1,
+                            'otp_value'=>NULL]);
+                    
+                $message = array('status'=>1, 'message'=>"Phone Verified! login successfully");
+                return $message;
+            }
+            else{
+                $message = array('status'=>0, 'message'=>"Wrong OTP");
+                return $message;
+            }
+       
+        }
+        else{
+            $message = array('status'=>0, 'message'=>"User not registered");
+            return $message;
+        }
+        
+    }
+    
+    
+     public function verifyPhone(Request $request)
     {
         $phone = $request->user_phone;
         $otp = $request->otp;
-        
+        $smsby = DB::table('smsby')
+              ->first();
+        if($smsby->status==1){      
         // check for otp verify
         $getUser = DB::table('users')
                     ->where('user_phone', $phone)
@@ -280,9 +347,19 @@ class UserController extends Controller
                 $message = array('status'=>0, 'message'=>"Wrong OTP");
                 return $message;
             }
+       
         }
         else{
             $message = array('status'=>0, 'message'=>"User not registered");
+            return $message;
+        }
+        }
+        else{
+              $getUser = DB::table('users')
+                            ->where('user_phone', $phone)
+                            ->update(['is_verified'=>1,
+                            'otp_value'=>NULL]);
+             $message = array('status'=>1, 'message'=>"Phone Verified! login successfully");
             return $message;
         }
     }
@@ -318,49 +395,8 @@ class UserController extends Controller
                     $otpval .= $chars[mt_rand(0, strlen($chars)-1)];
                 }
                 
-                $sms_api_key=  DB::table('msg91')
-                	       ->select('api_key', 'sender_id')
-                           ->first();
-                $api_key = $sms_api_key->api_key;
-                $sender_id = $sms_api_key->sender_id;
-    
-                $getAuthKey = $api_key;
-                $getSenderId = $sender_id;
-                $getInvitationMsg = "Your OTP is: ".$otpval.".\nNote: Please DO NOT SHARE this OTP with anyone."; 
-    
-                $authKey = $getAuthKey;
-                $mobileNumber = $user_phone;
-                $senderId = $getSenderId;
-                $message = $getInvitationMsg;
-                $route = "4";
-                $postData = array(
-                    'authkey' => $authKey,
-                    'mobiles' => $mobileNumber,
-                    'message' => $message,
-                    'sender' => $senderId,
-                    'route' => $route
-                );
-    
-                $url="https://control.msg91.com/api/sendhttp.php";
-    
-                $ch = curl_init();
-                curl_setopt_array($ch, array(
-                    CURLOPT_URL => $url,
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_POST => true,
-                    CURLOPT_POSTFIELDS => $postData
-                    //,CURLOPT_FOLLOWLOCATION => true
-                ));
-    
-                //Ignore SSL certificate verification
-                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-    
-                //get response
-                $output = curl_exec($ch);
-    
-                curl_close($ch);
-    
+               $otpmsg = $this->otpmsg($otpval,$user_phone);
+               
                 $updateOtp = DB::table('users')
                                 ->where('user_phone', $user_phone)
                                 ->update(['otp_value'=>$otpval]);
@@ -430,48 +466,7 @@ class UserController extends Controller
                     $otpval .= $chars[mt_rand(0, strlen($chars)-1)];
                 }
                 
-                $sms_api_key=  DB::table('msg91')
-                	              ->select('api_key', 'sender_id')
-                                  ->first();
-                $api_key = $sms_api_key->api_key;
-                $sender_id = $sms_api_key->sender_id;
-    
-                $getAuthKey = $api_key;
-                $getSenderId = $sender_id;
-                $getInvitationMsg = "Your OTP is: ".$otpval.".\nNote: Please DO NOT SHARE this OTP with anyone."; 
-    
-                $authKey = $getAuthKey;
-                $mobileNumber = $user_phone;
-                $senderId = $getSenderId;
-                $message = $getInvitationMsg;
-                $route = "4";
-                $postData = array(
-                    'authkey' => $authKey,
-                    'mobiles' => $mobileNumber,
-                    'message' => $message,
-                    'sender' => $senderId,
-                    'route' => $route
-                );
-    
-                $url="https://control.msg91.com/api/sendhttp.php";
-    
-                $ch = curl_init();
-                curl_setopt_array($ch, array(
-                    CURLOPT_URL => $url,
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_POST => true,
-                    CURLOPT_POSTFIELDS => $postData
-                    //,CURLOPT_FOLLOWLOCATION => true
-                ));
-    
-                //Ignore SSL certificate verification
-                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-    
-                //get response
-                $output = curl_exec($ch);
-    
-                curl_close($ch);
+               $otpmsg = $this->otpmsg($otpval,$user_phone);
     
                 $updateOtp = DB::table('users')
                                 ->where('user_phone', $user_phone)
@@ -566,7 +561,10 @@ class UserController extends Controller
     	$user_email = $request->user_email;
     	$user_phone = $request->user_phone;
     	$user_image = $request->user_image;
-    	$user_password = $request->user_password;
+    		$uu = DB::table('users')
+    	    ->where('user_id', $user_id)
+    	    ->first();
+    	$user_password = $uu->user_password;
         // $date=date('d-m-Y');
     	    
     	   if($request->user_image){
@@ -581,6 +579,17 @@ class UserController extends Controller
             else{
                 $user_image = 'N/A';
             }
+        
+        $checkUser = DB::table('users')
+    			->where('user_phone', $user_phone)
+    			->where('user_id','!=', $user_id)
+    			->first();
+    	if($checkUser && $checkUser->is_verified==1){
+    		$message = array('status'=>'0', 'message'=>'This Phone number is attached with another account');
+            return $message;
+    	}
+    	
+        else{
         
     		$insertUser = DB::table('users')
     		            ->where('user_id', $user_id)
@@ -607,8 +616,30 @@ class UserController extends Controller
 	        return $message;
 	    	}  
     	}
+    }
     
-    
-    
+      public function user_block_check(Request $request)
+    {   
+        $user_id = $request->user_id;
+         $user =  DB::table('users')
+                ->select('block')
+                ->where('user_id', $user_id )
+                ->first();
+                        
+    if($user){
+        if($user->block==1){
+        	$message = array('status'=>'1', 'message'=>'User is Blocked');
+	        return $message;
+        }else{
+            	$message = array('status'=>'2', 'message'=>'User is Active');
+	        return $message;
+            }
+         }
+    	else{
+    		$message = array('status'=>'0', 'message'=>'User not found');
+	        return $message;
+    	}
+        
+    }   
     
 }

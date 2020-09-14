@@ -120,4 +120,21 @@ trait SendMail {
             
         return "send";
     }
+     public function sendrejectmail($cause,$user,$cart_id) {
+        
+       $logo = DB::table('tbl_web_setting')
+             ->first();
+       $app_name = $logo->name;
+       $currency = DB::table('currency')
+               ->first();
+       
+        $data = array('to' => $user->user_email, 'from' => 'noreply@gogrocer.in', 'to-name'=>$user->user_name, 'from-name' => $app_name);
+
+        Mail::send('admin.mail.rejectmail', compact('cause', 'user', 'cart_id'), function ($m) use ($data){
+                $m->from($data['from'], $data['from-name']);
+                $m->to($data['to'], $data['to-name'])->subject("Order Cancelled.");
+            });
+            
+        return "send";
+     }
 }

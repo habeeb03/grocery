@@ -1,8 +1,8 @@
 @extends('admin.layout.app')
+<script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
 <style>
-    .btn{
-        height:27px !important;
-    }
+   
     .material-icons{
         margin-top:0px !important;
         margin-bottom:0px !important;
@@ -44,15 +44,18 @@
 <div class="card-header card-header-primary">
       <h4 class="card-title ">Coupon List</h4>
     </div>
-<table class="table">
+<div class="container"><br>
+<table class="display" id="myTable">
     <thead>
         <tr>
-            <th class="text-center">#</th>
+            <th>#</th>
             <th>Coupon Name</th>
             <th>Discount Value</th>
             <th>Amount Type</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Uses Limit Per User</th>
             <th>Cart Value</th>
-
             <th class="text-center">Actions</th>
         </tr>
     </thead>
@@ -65,6 +68,9 @@
             <td>{{$cities->coupon_name}}</td>
             <td>{{$cities->amount}}</td>
             <td>{{$cities->type}}</td>
+            <td>{{$cities->start_date}}</td>
+            <td>{{$cities->end_date}}</td>
+            <td>{{$cities->uses_restriction}}</td>
             <td>{{$cities->cart_value}}</td>
 
             <td class="td-actions text-center">
@@ -85,12 +91,17 @@
                   @endif
     </tbody>
 </table>
-<div class="pagination justify-content-end" align="right" style="width:100%;float:right !important">{{$coupon->links()}}</div>
+</div>
 </div>
 </div>
 </div>
 </div>
 <div>
     </div>
+       <script>
+        $(document).ready( function () {
+    $('#myTable').DataTable();
+} );
+    </script>
     @endsection
 </div>

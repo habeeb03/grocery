@@ -69,7 +69,7 @@ class ProductController extends Controller
                 ->join('product', 'product_varient.product_id', '=', 'product.product_id')
                 ->where('store_id', $store->store_id)
                 ->orderBy('store_products.stock','asc')
-                ->paginate(8);  
+                ->get();  
                 
         $check=  DB::table('store_products')
                 ->where('store_id', $store->store_id)
@@ -108,13 +108,19 @@ class ProductController extends Controller
                 ->first();
           
     $prod = $request->prod;
+    
     $countprod = count($prod);
 
     for($i=0;$i<=($countprod-1);$i++)
         {
+            $varient_id = $prod[$i];
+            $pr= DB::table('product_varient')
+                 ->where('varient_id',$varient_id)
+                 ->first();
+                 
             $insert2 = DB::table('store_products')
-                  ->insert(['store_id'=>$store->store_id,'stock'=>0, 'varient_id'=>$prod[$i]]);
-        }
+                  ->insert(['store_id'=>$store->store_id,'stock'=>0, 'varient_id'=>$prod[$i], 'price'=>$pr->base_price,'mrp'=>$pr->base_mrp]);
+        }     
           
          return redirect()->back()->withSuccess('Product Added Successfully');
     }

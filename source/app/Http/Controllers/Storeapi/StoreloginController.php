@@ -25,6 +25,7 @@ class StoreloginController extends Controller
     					->first();
 
     	if($checkstore){
+    	    if($checkstore->admin_approval==1){  
     		   $updateDeviceId = DB::table('store')
     		                       ->where('email', $email)
     		                        ->update(['device_id'=>$device_id]);
@@ -33,8 +34,11 @@ class StoreloginController extends Controller
     			$message = array('status'=>'1', 'message'=>'login successfully', 'data'=>[$checkstore]);
 	        	return $message;
     	   }	   
-    	
-    	
+    	   else{
+    		$message = array('status'=>'0', 'message'=>'Your store is under approval. Please wait for admin approval.', 'data'=>[]);
+	        return $message;
+    	}
+    	}
     	else{
     		$message = array('status'=>'0', 'message'=>'Wrong Password', 'data'=>[]);
 	        return $message;
@@ -53,11 +57,10 @@ class StoreloginController extends Controller
     {   
         $store_id = $request->store_id;
          $store=  DB::table('store')
-                ->join('orders','store.store_id','=','orders.store_id')
+                ->leftJoin('orders','store.store_id','=','orders.store_id')
                ->leftJoin('store_earning','store.store_id','=','store_earning.store_id')
                ->select('store.store_name','store.phone_number','store.email','store.address','store_earning.paid',DB::raw('SUM(orders.total_price)-SUM(orders.total_price)*(store.admin_share)/100 as store_earning'))
                ->groupBy('store.store_name','store.phone_number','store.email','store.address','store_earning.paid','store.admin_share')
-               ->where('orders.order_status','Completed')
                 ->where('store.store_id', $store_id )
                 ->first();
                         

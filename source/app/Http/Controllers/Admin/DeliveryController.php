@@ -20,7 +20,7 @@ class DeliveryController extends Controller
                 ->where('set_id', '1')
                 ->first();
            $d_boy = DB::table('delivery_boy')
-                    ->paginate(10);
+                    ->get();
         
     	return view('admin.d_boy.list', compact('title',"admin", "logo","d_boy"));
     }
@@ -44,9 +44,13 @@ class DeliveryController extends Controller
               
          $map1 = DB::table('map_API')
              ->first();
-         $map = $map1->map_api_key;       
+         $map = $map1->map_api_key;      
+          $mapset = DB::table('map_settings')
+                ->first();
+        $mapbox = DB::table('mapbox')
+                ->first();
         
-        return view('admin.d_boy.add',compact("d_boy", "admin_email","logo", "admin","title", 'city','map'));
+        return view('admin.d_boy.add',compact("d_boy", "admin_email","logo", "admin","title", 'city','map','mapset','mapbox'));
      }
     
      public function AddNewD_boy(Request $request)
@@ -63,7 +67,8 @@ class DeliveryController extends Controller
         $address1 = str_replace("-", "+", $addres);
          $mapapi = DB::table('map_API')
                  ->first();
-                 
+         $mapset= DB::table('map_settings')
+                ->first();        
                     
         $chkboyrphon = DB::table('delivery_boy')
                       ->where('boy_phone', $boy_phone)
@@ -73,13 +78,18 @@ class DeliveryController extends Controller
              return redirect()->back()->withErrors('This Phone Number Is Already Registered With Another Delivery Boy');
         } 
                  
-        $key = $mapapi->map_api_key;         
+        $key = $mapapi->map_api_key;  
+        if($mapset->mapbox == 0 && $mapset->google_map == 1){ 
         $response = json_decode(file_get_contents("https://maps.googleapis.com/maps/api/geocode/json?address=".$address1."&key=".$key));
         
         
          $lat = $response->results[0]->geometry->location->lat;
          $lng = $response->results[0]->geometry->location->lng;
-    
+        }
+        else{
+            $lat = $request->lat;
+            $lng = $request->lng;
+        }
         
         $this->validate(
             $request,
@@ -146,7 +156,11 @@ class DeliveryController extends Controller
          $map1 = DB::table('map_API')
              ->first();
          $map = $map1->map_api_key; 
-        return view('admin.d_boy.edit',compact("d_boy","admin_email","admin","logo","title","city","map"));
+         $mapset = DB::table('map_settings')
+                ->first();
+        $mapbox = DB::table('mapbox')
+                ->first();
+        return view('admin.d_boy.edit',compact("d_boy","admin_email","admin","logo","title","city","map",'mapset','mapbox'));
     }
 
     public function UpdateD_boy(Request $request)
@@ -157,7 +171,8 @@ class DeliveryController extends Controller
        $password = $request->password;
        $boy_loc = $request->boy_loc;
        $city =$request->city;
-      
+       $mapset= DB::table('map_settings')
+                ->first();
          $addres = str_replace(" ", "+", $boy_loc);
         $address1 = str_replace("-", "+", $addres);
         
@@ -173,12 +188,17 @@ class DeliveryController extends Controller
          $mapapi = DB::table('map_API')
                  ->first();
                  
-        $key = $mapapi->map_api_key;         
+        $key = $mapapi->map_api_key;  
+        if($mapset->mapbox == 0 && $mapset->google_map == 1){ 
         $response = json_decode(file_get_contents("https://maps.googleapis.com/maps/api/geocode/json?address=".$address1."&key=".$key));
         
          $lat = $response->results[0]->geometry->location->lat;
          $lng = $response->results[0]->geometry->location->lng;
-    
+        }
+        else{
+           $lat = $request->lat;
+            $lng = $request->lng; 
+        }
         
          $this->validate(
             $request,

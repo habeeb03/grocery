@@ -1,4 +1,6 @@
 @extends('admin.layout.app')
+<script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
 
 @section ('content')
 <div class="container-fluid">
@@ -34,7 +36,8 @@
       <h4 class="card-title">Delivery Boy (<b>{{$dboy->boy_name}})</b> Order List</h4>
       @if($dboy->status == 1) <span style="float:right; height: 15px;width: 15px;background-color: green;border-radius: 50%;display: inline-block;" class="dot"></span> @else <span style="float:right; height: 15px;width: 15px;background-color: red;border-radius: 50%;display: inline-block;" class="dot"></span> @endif
     </div>
-<table class="table">
+<div class="container"><br>   
+<table class="display" id="myTable">
     <thead>
         <tr>
             <th class="text-center">#</th>
@@ -70,7 +73,7 @@
                   @endif
     </tbody>
 </table>
-<div class="pagination justify-content-end" align="right" style="width:100%;float:right !important">{{$ord->links()}}</div>
+</div>
 </div>
 </div>
 </div>
@@ -111,7 +114,7 @@
                             </td>
                             <td>{{$detailss->qty}}</td>
                             <td> 
-                            <p><span style="color:grey">{{$detailss->price * $detailss->qty}}</span></p>
+                            <p><span style="color:grey">{{$detailss->price}}</span></p>
                            </td>
     		          	  @endif
                          </tr>
@@ -154,7 +157,7 @@
         		     	<select name="dboy" class="form-control">
         			    <option disabled selected>Select Delivery boy</option>
         			    @foreach($nearbydboy as $nearbydboys)
-        			    <option value="{{$nearbydboys->dboy_id}}">{{$nearbydboys->boy_name}}({{$nearbydboys->distance}} KM)({{$nearbydboys->count}} orders)</option>
+        			    <option value="{{$nearbydboys->dboy_id}}">{{$nearbydboys->boy_name}}({{$nearbydboys->distance}} KM away)</option>
         			    @endforeach
         			</select>
         			</div>
@@ -169,6 +172,10 @@
         	</div>
         </div>
  @endforeach
-
+ <script>
+        $(document).ready( function () {
+    $('#myTable').DataTable();
+} );
+    </script>
     @endsection
 </div>

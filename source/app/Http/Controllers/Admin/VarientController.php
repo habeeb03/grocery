@@ -28,7 +28,7 @@ class VarientController extends Controller
                 ->first();
         $product= DB::table('product_varient')
                  ->where('product_id', $id)
-                ->paginate(10);
+                ->get();
         $currency =  DB::table('currency')
                ->select('currency_sign')
                 ->get();           
@@ -111,7 +111,7 @@ class VarientController extends Controller
         
         
         $insert =  DB::table('product_varient')
-                        ->insert(['product_id'=>$id,'mrp'=>$mrp, 'price'=>$price,'varient_image'=>$image, 'unit'=>$unit, 'quantity'=>$quantity,'description'=>$description]);
+                        ->insert(['product_id'=>$id,'base_mrp'=>$mrp, 'base_price'=>$price,'varient_image'=>$image, 'unit'=>$unit, 'quantity'=>$quantity,'description'=>$description]);
      if($insert){
          return redirect()->back()->withSuccess('Successfully Added');
      }
@@ -180,7 +180,7 @@ class VarientController extends Controller
 
        $varient_update = DB::table('product_varient')
                             ->where('varient_id', $product_id)
-                            ->update(['mrp'=>$mrp, 'price'=>$price,'varient_image'=>$varient_image, 'unit'=>$unit, 'quantity'=>$quantity,'description'=>$description]);
+                            ->update(['base_mrp'=>$mrp, 'base_price'=>$price,'varient_image'=>$varient_image, 'unit'=>$unit, 'quantity'=>$quantity,'description'=>$description]);
 
         if($varient_update){
 

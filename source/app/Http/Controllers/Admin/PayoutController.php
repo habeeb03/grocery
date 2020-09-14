@@ -7,10 +7,12 @@ use App\Http\Controllers\Controller;
 use DB;
 use Session;
 use App\Traits\SendMail;
+use App\Traits\SendSms;
 
 class PayoutController extends Controller
 {
     use SendMail;
+    use SendSms;
 
     public function pay_req(Request $request)
     {
@@ -32,7 +34,7 @@ class PayoutController extends Controller
                            ->groupBy('store.store_id','store.store_name', 'store.phone_number','store.address','store.email','store_earning.paid','store.admin_share','payout_requests.payout_amt', 'payout_requests.complete','payout_requests.req_id','store_bank.ac_no', 'store_bank.ifsc','store_bank.holder_name','store_bank.bank_name', 'store_bank.upi')
                            ->where('orders.order_status','Completed')
                            ->where('payout_requests.complete', 0)
-                           ->paginate(10);
+                           ->get();
                         
     	return view('admin.store.payoutRequest', compact('title',"admin", "logo","total_earnings"));
     }
@@ -56,7 +58,8 @@ class PayoutController extends Controller
         $check2 = DB::table('store')
                 ->where('store_id',$store_id)
                 ->first();        
-                
+        $store_phone =  $check2->phone_number;
+        
         if($check){
         $new_amount = $check->paid + $amt;    
         $update = DB::table('store_earning')
@@ -72,46 +75,7 @@ class PayoutController extends Controller
                 ->update(['complete'=>1]);
         }
         if($update){
-            
-             $sms_api_key=  DB::table('msg91')
-    	              ->select('api_key', 'sender_id')
-                      ->first();
-            $api_key = $sms_api_key->api_key;
-            $sender_id = $sms_api_key->sender_id;
-                        $getAuthKey = $api_key;
-                        $getSenderId = $sender_id;
-                        $getInvitationMsg = 'Amount of '.$amt.' marked paid successfully against your request.';
-        
-                        $authKey = $getAuthKey;
-                        $senderId = $getSenderId;
-                        $message1 = $getInvitationMsg;
-                        $route = "4";
-                        $postData = array(
-                            'authkey' => $authKey,
-                            'mobiles' => $check2->phone_number,
-                            'message' => $message1,
-                            'sender' => $senderId,
-                            'route' => $route
-                        );
-        
-                        $url="https://control.msg91.com/api/sendhttp.php";
-        
-                        $ch = curl_init();
-                        curl_setopt_array($ch, array(
-                            CURLOPT_URL => $url,
-                            CURLOPT_RETURNTRANSFER => true,
-                            CURLOPT_POST => true,
-                            CURLOPT_POSTFIELDS => $postData
-                        ));
-
-                //Ignore SSL certificate verification
-                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-
-                //get response
-                $output = curl_exec($ch);
-
-                curl_close($ch);
+             $sendmsg = $this->sendpayoutmsg($amt,$store_phone);
                 
                 $store_name = $check2->store_name;
                 $user_email = $check2->email;  

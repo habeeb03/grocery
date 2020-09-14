@@ -31,17 +31,23 @@
             <div class="col-md-12">
               <div class="card">
                 <div class="card-header card-header-primary">
-                  <h4 class="card-title">App Setting</h4>
+                  <h4 class="card-title">App Name | Site Logo | Favicon | Country code</h4>
                   <form class="forms-sample" action="{{route('updateappdetails')}}" method="post" enctype="multipart/form-data">
                       {{csrf_field()}}
                 </div>
                 <div class="card-body">
  
                      <div class="row">
-                      <div class="col-md-12">
+                      <div class="col-md-6">
                         <div class="form-group">
                           <label class="bmd-label-floating">App Name</label>
                           <input type="text"name="app_name" value="{{($logo->name)}}" class="form-control">
+                        </div>
+                      </div>
+                       <div class="col-md-6">
+                        <div class="form-group">
+                          <label class="bmd-label-floating">Country Code</label>
+                          <input type="text"name="country_code" value="{{($cc->country_code)}}" class="form-control">
                         </div>
                       </div>
 
@@ -52,7 +58,7 @@
                      
                      
                         <div class="form">
-                          <label class="bmd-label-floating">App Icon</label>
+                          <label class="bmd-label-floating">Site Logo</label>
                           <input type="file"name="app_icon" class="form-control">
                         </div>
                       </div>
@@ -72,6 +78,36 @@
                   </form>
                 </div>
               </div>
+            
+                <div class="card">
+                <div class="card-header card-header-primary">
+                  <h4 class="card-title">Currency</h4>
+                  <form class="forms-sample" action="{{route('updatecurrency')}}" method="post" enctype="multipart/form-data">
+                      {{csrf_field()}}
+                </div>
+                <div class="card-body">
+ 
+                     <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label class="bmd-label-floating">Currency Name</label>
+                          <input type="text" name="currency_name" value="{{($currency->currency_name)}}" class="form-control">
+                        </div>
+                      </div>
+                       <div class="col-md-6">
+                        <div class="form-group">
+                          <label class="bmd-label-floating">Currency Sign</label>
+                          <input type="text" name="currency_sign" value="{{($currency->currency_sign)}}" class="form-control">
+                        </div>
+                      </div>
+
+                    </div>
+                    <button type="submit" class="btn btn-primary pull-center">Submit</button>
+                    <div class="clearfix"></div>
+                  </form>
+                </div>
+              </div>
+             
             </div>
 			</div>
           </div>

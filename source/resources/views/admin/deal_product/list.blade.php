@@ -1,8 +1,8 @@
 @extends('admin.layout.app')
+<script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
+
 <style>
-    .btn{
-        height:27px !important;
-    }
     .material-icons{
         margin-top:0px !important;
         margin-bottom:0px !important;
@@ -45,7 +45,8 @@
 <div class="card-header card-header-primary">
       <h4 class="card-title ">Deal Products</h4>
     </div>
-<table class="table">
+<div class="container"><br>    
+<table class="display" id="myTable">
     <thead>
         <tr>
             <th class="text-center">#</th>
@@ -67,15 +68,16 @@
             <td>{{$deal->deal_price}}</td>
             <td>{{$deal->valid_from}}</td>
             <td>{{$deal->valid_to}}</td>
+            @if($deal->valid_to > $currentdate && $currentdate >= $deal->valid_from)
+            <td style="color:green">Ongoing</td>
+            @endif
             @if($deal->valid_to < $currentdate)
             <td style="color:red">Expired</td>
             @endif
             @if($deal->valid_from > $currentdate)
             <td style="color:blue">Coming soon</td>
             @endif
-            @if($deal->valid_to > $currentdate && $currentdate > $deal->valid_from)
-            <td style="color:green">Ongoing</td>
-            @endif
+          
             
             <td class="td-actions text-right">
                 <a href="{{route('EditDeal',$deal->deal_id)}}" rel="tooltip" class="btn btn-success">
@@ -95,12 +97,17 @@
                   @endif
     </tbody>
 </table>
-<div class="pagination justify-content-end" align="right" style="width:100%;float:right !important">{{$deal_p->links()}}</div>
+</div>
 </div>
 </div>
 </div>
 </div>
 <div>
     </div>
+     <script>
+        $(document).ready( function () {
+    $('#myTable').DataTable();
+} );
+    </script>
     @endsection
 </div>

@@ -87,7 +87,7 @@
                 <div class="card-footer">
                   <div class="stats">
                     <i class="material-icons text-danger">local_atm</i>
-                    <a href="javascript:;">Total Earnings</a>
+                    <a href="{{route('finance')}}">All Stores Earnings</a>
                   </div>
                 </div>
               </div>
@@ -121,7 +121,7 @@
                <div class="card-footer">
                   <div class="stats">
                     <i class="material-icons text-danger">info_outline</i>
-                    <a href="javascript:;">Total Cancelled Orders</a>
+                    <a href="{{route('admin_can_orders')}}">Total Cancelled Orders</a>
                   </div>
                 </div>
               </div>
@@ -132,7 +132,7 @@
                   <div class="card-icon">
                     <i class="material-icons">face</i>
                   </div>
-                  <p class="card-category">Cpmpleted Orders</p>
+                  <p class="card-category">Completed Orders</p>
                   <h3 class="card-title">{{$completed_orders}}</h3>
                 </div>
                  <div class="card-footer">

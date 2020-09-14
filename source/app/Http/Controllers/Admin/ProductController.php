@@ -21,7 +21,7 @@ class ProductController extends Controller
                 ->first();
            $product = DB::table('product')
                     ->join('categories','product.cat_id','=','categories.cat_id')
-                   ->paginate(10);
+                   ->get();
         
     	return view('admin.product.list', compact('title',"admin", "logo","product"));
     }
@@ -42,11 +42,17 @@ class ProductController extends Controller
                    ->select('parent')
                    ->get();
                    
+        if(count($cat)>0){           
         foreach($cat as $cats) {
             $a = $cats->parent;
            $aa[] = array($a); 
         }
-      
+        }
+        else{
+            $a = 0;
+           $aa[] = array($a);
+        }
+        
          $category = DB::table('categories')
                   ->where('level', '!=', 0)
                   ->WhereNotIn('cat_id',$aa)
@@ -72,7 +78,7 @@ class ProductController extends Controller
         $this->validate(
             $request,
                 [
-                    
+                    'cat_id'=>'required',
                     'product_name' => 'required',
                     'product_image' => 'required|mimes:jpeg,png,jpg|max:1000',
                     'quantity'=> 'required',
@@ -81,6 +87,7 @@ class ProductController extends Controller
                     'mrp'=>'required',
                 ],
                 [
+                    'cat_id.required'=>'Select category',
                     'product_name.required' => 'Enter product name.',
                     'product_image.required' => 'Choose product image.',
                     'quantity.required' => 'Enter quantity.',
@@ -118,8 +125,8 @@ class ProductController extends Controller
                 'quantity'=>$quantity,
                 'varient_image'=>$product_image,
                 'unit'=>$unit,
-                'price'=>$price,
-                'mrp'=>$mrp,
+                'base_price'=>$price,
+                'base_mrp'=>$mrp,
                 'description'=>$description,
                
             ]);

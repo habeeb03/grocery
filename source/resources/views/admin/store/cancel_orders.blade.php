@@ -1,4 +1,6 @@
 @extends('admin.layout.app')
+<script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
 
 @section ('content')
 <div class="container-fluid">
@@ -33,7 +35,8 @@
 <div class="card-header card-header-primary">
       <h4 class="card-title ">Store Cancel Order List</h4>
     </div>
-<table class="table">
+<div class="container"> <br> 
+<table class="display" id="myTable">
     <thead>
         <tr>
             <th class="text-center">#</th>
@@ -42,7 +45,8 @@
             <th>User</th>
             <th>Delivery_Date</th>
             <th>Cart Products</th>
-            <th class="text-right">status</th>
+            <th>Assign</th>
+            <th>Action</th>
         </tr>
     </thead>
     <tbody>
@@ -55,10 +59,11 @@
             <td>{{$ords->total_price}}</td>
             <td>{{$ords->user_name}}({{$ords->user_phone}})</td>
              <td>{{$ords->delivery_date}}</td>
-            <td><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal1{{$ords->cart_id}}">Details</button>
-            <td class="td-actions text-right">
+            <td><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal1{{$ords->cart_id}}">Details</button></td>
+            <td>
                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal1{{$ords->order_id}}">Assign Store</button>
             </td>
+             <td><button type="button" class="btn btn-alert" data-toggle="modal" data-target="#exampleModal2{{$ords->cart_id}}">Reject</button>
         </tr>
           @php $i++; @endphp
                  @endforeach
@@ -69,7 +74,7 @@
                   @endif
     </tbody>
 </table>
-<div class="pagination justify-content-end" align="right" style="width:100%;float:right !important">{{$ord->links()}}</div>
+</div>
 </div>
 </div>
 </div>
@@ -110,7 +115,7 @@
                             </td>
                             <td>{{$detailss->qty}}</td>
                             <td> 
-                            <p><span style="color:grey">{{$detailss->price * $detailss->qty}}</span></p>
+                            <p><span style="color:grey">{{$detailss->price}}</span></p>
                            </td>
     		          	  @endif
                          </tr>
@@ -130,7 +135,39 @@
         	</div>
         </div>
  @endforeach
- 
+<!--/////////reject orders///////////-->
+@foreach($ord as $ords)
+        <div class="modal fade" id="exampleModal2{{$ords->cart_id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        	<div class="modal-dialog" role="document">
+        		<div class="modal-content">
+        			<div class="modal-header">
+        				<h5 class="modal-title" id="exampleModalLabel">Order Details (<b>{{$ords->cart_id}}</b>)</h5>
+        					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        						<span aria-hidden="true">&times;</span>
+        					</button>
+        			</div>
+        			<!--//form-->
+        		<form class="forms-sample" action="{{route('admin_reject_order', $ords->cart_id)}}" method="post" enctype="multipart/form-data">
+                      {{csrf_field()}}
+        			<div class="row">
+        			  <div class="col-md-3" align="center"></div>  
+                      <div class="col-md-6" align="center">
+                          <br>
+                        <div class="form-group">
+                           <label>Send Rejection Reason to User</label>    
+        		     	   <textarea name="cause" row="5" required></textarea>
+        			    </div>
+        			<button type="submit" class="btn btn-primary pull-center">Submit</button>
+        			</div>
+        			</div>
+        			  
+                    <div class="clearfix"></div>
+        			</form>
+        		
+        		</div>
+        	</div>
+        </div>
+ @endforeach
  
  <!--/////////details model//////////-->
 @foreach($ord as $ords)
@@ -170,6 +207,10 @@
         	</div>
         </div>
  @endforeach
-
+<script>
+        $(document).ready( function () {
+    $('#myTable').DataTable();
+} );
+    </script>
     @endsection
 </div>

@@ -21,7 +21,7 @@ class UserController extends Controller
                 ->first();
            $users = DB::table('users')
                    ->orderBy('reg_date','desc')
-                    ->paginate(20);
+                    ->get();
         
     	return view('admin.user.list', compact('title',"admin", "logo","users"));
     }
@@ -47,10 +47,33 @@ class UserController extends Controller
         $user_id = $request->id;
          $users = DB::table('users')
                 ->where('user_id',$user_id)
-                ->update(['block'=>0]);
+                ->update(['block'=>2]);
                 
      if($users){   
     return redirect()->back()->withSuccess('User Unblocked Successfully');
+    }
+    else{
+      return redirect()->back()->withErrors('Something Wents Wrong');   
+    }
+    }
+    
+     public function del_user(Request $request)
+    {
+        
+        $user_id = $request->id;
+         $users = DB::table('users')
+                ->where('user_id',$user_id)
+                ->delete();
+                
+     if($users){  
+         $address = DB::table('address')
+                  ->where('user_id',$user_id)
+                ->delete();
+         $orders = DB::table('orders')
+                 ->where('user_id',$user_id)
+                 ->delete();
+         
+    return redirect()->back()->withSuccess('User deleted Successfully');
     }
     else{
       return redirect()->back()->withErrors('Something Wents Wrong');   

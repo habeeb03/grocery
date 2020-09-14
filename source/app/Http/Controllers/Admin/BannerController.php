@@ -58,7 +58,7 @@ class BannerController extends Controller
                 [
                     
                     'banner'=>'required',
-                    'image'=>'required',
+                    'image'=>'required|mimes:jpeg,png,jpg|max:2048',
                 ],
                 [
                     

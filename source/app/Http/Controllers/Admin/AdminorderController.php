@@ -6,9 +6,14 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use DB;
 use Session;
+use Carbon\Carbon;
+use App\Traits\SendMail;
+use App\Traits\SendSms;
 
 class AdminorderController extends Controller
 {
+    use SendMail;
+    use SendSms;
     
      public function admin_com_orders(Request $request)
     {
@@ -27,18 +32,47 @@ class AdminorderController extends Controller
              ->join('users', 'orders.user_id', '=','users.user_id')
              ->orderBy('orders.delivery_date','DESC')
              ->where('order_status', 'completed')
-             ->paginate(10);
+             ->orWhere('order_status', 'Completed')
+             ->get();
              
          $details  =   DB::table('orders')
     	                ->join('store_orders', 'orders.cart_id', '=', 'store_orders.order_cart_id') 
-    	                ->join('product_varient', 'store_orders.varient_id', '=', 'product_varient.varient_id')
-    	                ->join('product','product_varient.product_id', '=', 'product.product_id')
-    	                ->select('product.product_name','product_varient.price','product_varient.mrp','product_varient.unit','product_varient.quantity','product_varient.varient_image','product_varient.description','orders.cart_id','store_orders.varient_id','store_orders.store_order_id','store_orders.qty','orders.total_price')
     	               ->where('store_orders.store_approval',1)
     	               ->get();         
                 
        return view('admin.all_orders.com_orders', compact('title','logo','ord','details','admin'));         
     }
+    
+    
+    
+      public function admin_can_orders(Request $request)
+    {
+         $title = "Cancelled Order section";
+         $admin_email=Session::get('bamaAdmin');
+    	 $admin= DB::table('admin')
+    	 		   ->where('admin_email',$admin_email)
+    	 		   ->first();
+    	  $logo = DB::table('tbl_web_setting')
+                ->where('set_id', '1')
+                ->first();
+                
+        $ord =DB::table('orders')
+             ->leftjoin('store','orders.store_id', '=', 'store.store_id')
+             ->leftjoin('delivery_boy','orders.dboy_id', '=', 'delivery_boy.dboy_id')
+             ->join('users', 'orders.user_id', '=','users.user_id')
+             ->orderBy('orders.delivery_date','DESC')
+             ->where('order_status', 'cancelled')
+             ->orWhere('order_status', 'Cancelled')
+             ->get();
+             
+         $details  =   DB::table('orders')
+    	                ->join('store_orders', 'orders.cart_id', '=', 'store_orders.order_cart_id')
+    	               ->where('store_orders.store_approval',1)
+    	               ->get();         
+                
+       return view('admin.all_orders.cancelled', compact('title','logo','ord','details','admin'));         
+    }
+    
     
       public function admin_pen_orders(Request $request)
     {
@@ -55,13 +89,11 @@ class AdminorderController extends Controller
              ->join('users', 'orders.user_id', '=','users.user_id')
              ->orderBy('orders.delivery_date','DESC')
              ->where('orders.order_status', 'Pending')
-             ->paginate(10);
+             ->orWhere('orders.order_status', 'pending')
+             ->get();
              
          $details  =   DB::table('orders')
     	                ->join('store_orders', 'orders.cart_id', '=', 'store_orders.order_cart_id') 
-    	                ->join('product_varient', 'store_orders.varient_id', '=', 'product_varient.varient_id')
-    	                ->join('product','product_varient.product_id', '=', 'product.product_id')
-    	                ->select('product.product_name','product_varient.price','product_varient.mrp','product_varient.unit','product_varient.quantity','product_varient.varient_image','product_varient.description','orders.cart_id','store_orders.varient_id','store_orders.store_order_id','store_orders.qty','orders.total_price')
     	               ->where('store_orders.store_approval',1)
     	               ->get();         
                 
@@ -89,13 +121,10 @@ class AdminorderController extends Controller
              ->where('orders.store_id',$store->store_id)
              ->orderBy('orders.delivery_date','ASC')
              ->where('order_status','!=', 'completed')
-             ->paginate(10);
+             ->get();
              
          $details  =   DB::table('orders')
     	                ->join('store_orders', 'orders.cart_id', '=', 'store_orders.order_cart_id') 
-    	                ->join('product_varient', 'store_orders.varient_id', '=', 'product_varient.varient_id')
-    	                ->join('product','product_varient.product_id', '=', 'product.product_id')
-    	                ->select('product.product_name','product_varient.price','product_varient.mrp','product_varient.unit','product_varient.quantity','product_varient.varient_image','product_varient.description','orders.cart_id','store_orders.varient_id','store_orders.store_order_id','store_orders.qty','orders.total_price')
     	               ->where('orders.store_id',$id)
     	               ->where('store_orders.store_approval',1)
     	               ->get();         
@@ -144,10 +173,7 @@ class AdminorderController extends Controller
              ->paginate(10);
              
          $details  =   DB::table('orders')
-    	                ->join('store_orders', 'orders.cart_id', '=', 'store_orders.order_cart_id') 
-    	                ->join('product_varient', 'store_orders.varient_id', '=', 'product_varient.varient_id')
-    	                ->join('product','product_varient.product_id', '=', 'product.product_id')
-    	                ->select('product.product_name','product_varient.price','product_varient.mrp','product_varient.unit','product_varient.quantity','product_varient.varient_image','product_varient.description','orders.cart_id','store_orders.varient_id','store_orders.store_order_id','store_orders.qty','orders.total_price')
+    	               ->join('store_orders', 'orders.cart_id', '=', 'store_orders.order_cart_id') 
     	               ->where('orders.dboy_id',$id)
     	               ->where('store_orders.store_approval',1)
     	               ->get();         
@@ -173,19 +199,18 @@ class AdminorderController extends Controller
              ->join('address', 'orders.address_id', '=','address.address_id')
              ->orderBy('orders.delivery_date','ASC')
              ->where('order_status','!=', 'completed')
+             ->where('order_status','!=', 'cancelled')
+              ->where('payment_method','!=', NULL)
              ->where('store_id', 0)
              ->paginate(10);
              
             
-             $nearbystores = DB::table('store')
+        $nearbystores = DB::table('store')
                           ->get();
          
              
          $details  =   DB::table('orders')
     	                ->join('store_orders', 'orders.cart_id', '=', 'store_orders.order_cart_id') 
-    	                ->join('product_varient', 'store_orders.varient_id', '=', 'product_varient.varient_id')
-    	                ->join('product','product_varient.product_id', '=', 'product.product_id')
-    	                ->select('product.product_name','product_varient.price','product_varient.mrp','product_varient.unit','product_varient.quantity','product_varient.varient_image','product_varient.description','orders.cart_id','store_orders.varient_id','store_orders.store_order_id','store_orders.qty','orders.total_price')
     	               ->where('store_orders.store_approval',1)
     	               ->get();         
                 
@@ -235,6 +260,104 @@ class AdminorderController extends Controller
              
       
       return redirect()->back()->withSuccess('Assigned to Another Delivery Boy Successfully');
+    }
+    
+    
+        public function rejectorder(Request $request)
+    {
+         $cart_id=$request->id;
+         $ord= DB::table('orders')
+    	 		->where('cart_id',$cart_id)
+    	 		->first();
+    	 $total_price = $ord->rem_price;		
+    	 $user = DB::table('users')
+    	 		->where('user_id',$ord->user_id)
+    	 		->first();	
+    	 $user_id = $ord->user_id;		
+    	 $wall = $user->wallet;		
+    	 $bywallet = $ord->paid_by_wallet;	
+    	 if($ord->payment_method != 'COD' || $ord->payment_method != 'cod'|| $ord->payment_method != 'Cod'){
+    	$newwallet = $wall + $total_price + $bywallet;
+    	$update = DB::table('users')
+    	 		->where('user_id',$ord->user_id)
+    	 		->update(['wallet'=>$newwallet]);
+    	 }	
+    	 else{
+    	     	$newwallet = $wall + $bywallet;
+    	$update = DB::table('users')
+    	 		->where('user_id',$ord->user_id)
+    	 		->update(['wallet'=>$newwallet]);
+    	 }
+    	 
+         $cause = $request->cause;
+         
+         $checknotificationby = DB::table('notificationby')
+                              ->where('user_id',$user->user_id)
+                              ->first();
+         if($checknotificationby->sms == 1){
+         $sendmsg = $this->sendrejectmsg($cause,$user,$cart_id);
+         }
+         if($checknotificationby->email == 1){
+         $sendmail = $this->sendrejectmail($cause,$user,$cart_id);
+         }
+         if($checknotificationby->app == 1){
+         //////send notification to user//////////
+             $notification_title = "Sorry! we are cancelling your order";
+                        $notification_text = 'Hello '.$user->user_name.', We are cancelling your order ('.$cart_id.') due to following reason:  '.$cause;
+                        $date = date('d-m-Y');
+                        $getDevice = DB::table('users')
+                                 ->where('user_id', $user_id)
+                                ->select('device_id')
+                                ->first();
+                        $created_at = Carbon::now();
+                        if($getDevice){
+                        $getFcm = DB::table('fcm')
+                                    ->where('id', '1')
+                                    ->first();
+                                    
+                        $getFcmKey = $getFcm->server_key;
+                        $fcmUrl = 'https://fcm.googleapis.com/fcm/send';
+                        $token = $getDevice->device_id;
+                            $notification = [
+                                'title' => $notification_title,
+                                'body' => $notification_text,
+                                'sound' => true,
+                            ];
+                            $extraNotificationData = ["message" => $notification];
+                            $fcmNotification = [
+                                'to'        => $token,
+                                'notification' => $notification,
+                                'data' => $extraNotificationData,
+                            ];
+                
+                            $headers = [
+                                'Authorization: key='.$getFcmKey,
+                                'Content-Type: application/json'
+                            ];
+                
+                            $ch = curl_init();
+                            curl_setopt($ch, CURLOPT_URL,$fcmUrl);
+                            curl_setopt($ch, CURLOPT_POST, true);
+                            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fcmNotification));
+                            $result = curl_exec($ch);
+                            curl_close($ch);
+                        $dd = DB::table('user_notification')
+                            ->insert(['user_id'=>$user_id,
+                             'noti_title'=>$notification_title,
+                             'noti_message'=>$notification_text]);
+                            
+                        $results = json_decode($result);
+                        }
+         }
+         
+          $ord =DB::table('orders')
+             ->where('cart_id', $cart_id)
+             ->update(['cancelling_reason'=>"Cancelled by Admin due to the following reason: ".$cause,
+             'order_status'=>"cancelled"]);
+         return redirect()->back()->withSuccess('Order Rejected Successfully');
     }
     
 }

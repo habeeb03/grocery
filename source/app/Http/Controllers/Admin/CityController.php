@@ -10,7 +10,7 @@ class CityController extends Controller
 {
     public function citylist(Request $request)
     {
-         $title = "Home";
+         $title = "City List";
          $admin_email=Session::get('bamaAdmin');
     	 $admin= DB::table('admin')
     	 		   ->where('admin_email',$admin_email)
@@ -20,7 +20,7 @@ class CityController extends Controller
                 ->first();
         
         $city = DB::table('city')
-                ->paginate(6);
+                ->get();
                 
         return view('admin.city.citylist', compact('title','city','admin','logo'));    
         

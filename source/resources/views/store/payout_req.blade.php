@@ -1,4 +1,4 @@
-﻿@extends('store.layout.app')
+@extends('store.layout.app')
 @section ('content')
 <div class="row">
 

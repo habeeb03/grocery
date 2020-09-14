@@ -21,7 +21,7 @@ class StoreController extends Controller
                 ->first();
         
         $city = DB::table('store')
-                ->paginate(10);
+                ->get();
                 
         return view('admin.store.storeclist', compact('title','city','admin','logo'));    
         
@@ -42,8 +42,12 @@ class StoreController extends Controller
                 ->get();
         $map1 = DB::table('map_API')
              ->first();
-         $map = $map1->map_api_key;       
-        return view('admin.store.storeadd', compact('title','city','admin','logo','map'));    
+         $map = $map1->map_api_key;     
+         $mapset = DB::table('map_settings')
+                ->first();
+        $mapbox = DB::table('mapbox')
+                ->first();
+        return view('admin.store.storeadd', compact('title','city','admin','logo','map','mapset','mapbox'));    
         
         
     }
@@ -56,6 +60,7 @@ class StoreController extends Controller
         $number = $request->number;
         $city = $request->city;
         $email = $request->email;
+        $range = $request->range;
         $password = $request->password;
         $password = $request->password;
         $address = $request->address;
@@ -65,7 +70,9 @@ class StoreController extends Controller
         $address1 = str_replace("-", "+", $addres);
         $checkmap = DB::table('map_API')
                   ->first();
-                  
+         $mapset= DB::table('map_settings')
+                ->first();
+                
         $chkstorphon = DB::table('store')
                       ->where('phone_number', $number)
                       ->first(); 
@@ -83,12 +90,17 @@ class StoreController extends Controller
         if($chkstoremail){
              return redirect()->back()->withErrors('This Email is Already Registered With Another Store');
         } 
-                  
+          
+        if($mapset->mapbox == 0 && $mapset->google_map == 1){        
         $response = json_decode(file_get_contents("https://maps.googleapis.com/maps/api/geocode/json?address=".$address1."&key=".$checkmap->map_api_key));
         
          $lat = $response->results[0]->geometry->location->lat;
          $lng = $response->results[0]->geometry->location->lng;
-        
+        }
+        else{
+           $lat = $request->lat;
+           $lng = $request->lng;  
+        }
        
         
         $this->validate(
@@ -98,7 +110,8 @@ class StoreController extends Controller
                     'store_name'=>'required',
                     'emp_name'=>'required',
                     'number'=>'required',
-                    
+                    'range'=>'required',
+                    'address'=>'required',
                     'email'=>'required',
                     'password'=>'required',
                 ],
@@ -107,7 +120,8 @@ class StoreController extends Controller
                     'store_name.required'=>'Store Name Required',
                     'emp_name.required'=>'Employee Name Required',
                     'number.required'=>'Phone Number Required',
-                   
+                    'range.required'=>'Enter delivery range',
+                    'address.required'=>'Enter store address',
                     'email.required'=>'E-mail Address Required',
                     'password.required'=>'Password Required',
 
@@ -124,6 +138,7 @@ class StoreController extends Controller
                         'phone_number'=>$number,
                         'city'=>$city,
                         'email'=>$email,
+                        'del_range'=> $range,
                         'password'=>$password,
                         'address'=>$address,
                         'lat'=>$lat,
@@ -162,8 +177,11 @@ class StoreController extends Controller
         $store = DB::table('store')
                 ->where('store_id',$store_id)
                 ->first();
-                
-        return view('admin.store.storeedit', compact('title','city','store','admin','logo','map'));    
+         $mapset = DB::table('map_settings')
+                ->first();
+        $mapbox = DB::table('mapbox')
+                ->first();
+        return view('admin.store.storeedit', compact('title','city','store','admin','logo','map','mapset','mapbox'));    
         
         
     }
@@ -177,6 +195,7 @@ class StoreController extends Controller
         $emp_name = $request->emp_name;
         $number = $request->number;
         $city = $request->city;
+        $range = $request->range;
         $email = $request->email;
         $password = $request->password;
         $address = $request->address;
@@ -184,7 +203,8 @@ class StoreController extends Controller
         $address1 = str_replace("-", "+", $addres);
          $checkmap = DB::table('map_API')
                   ->first();
-
+         $mapset= DB::table('map_settings')
+                ->first();
          $chkstorphon = DB::table('store')
                       ->where('phone_number', $number)
                       ->where('store_id', '!=', $store_id)
@@ -206,14 +226,16 @@ class StoreController extends Controller
              return redirect()->back()->withErrors('This Email is Already Registered With Another Store');
         } 
         
-        
-        
-        
+        if($mapset->mapbox == 0 && $mapset->google_map == 1){ 
         $response = json_decode(file_get_contents("https://maps.googleapis.com/maps/api/geocode/json?address=".$address1."&key=".$checkmap->map_api_key));
         
          $lat = $response->results[0]->geometry->location->lat;
          $lng = $response->results[0]->geometry->location->lng;
-        
+        }
+        else{
+            $lat = $request->lat;
+            $lng = $request->lng;
+        }
         $this->validate(
             $request,
                 [
@@ -223,15 +245,20 @@ class StoreController extends Controller
                     'number'=>'required',
                     'email'=>'required',
                     'password'=>'required',
+                    'range'=>'required',
+                    'address'=>'required',
+                    'share'=>'required'
                 ],
                 [
                     
                     'store_name.required'=>'Store Name Required',
                     'emp_name.required'=>'Employee Name Required',
                     'number.required'=>'Phone Number Required',
-                    
+                    'range.required'=>'Enter delivery range',
+                    'address.required'=>'Enter store address',
                     'email.required'=>'E-mail Address Required',
                     'password.required'=>'Password Required',
+                    'share.required'=>'Admin Share Required'
 
                 ]
         );
@@ -244,10 +271,12 @@ class StoreController extends Controller
                         'phone_number'=>$number,
                         'city'=>$city,
                         'email'=>$email,
+                        'del_range'=>$range,
                         'password'=>$password,
                         'address'=>$address,
                         'lat'=>$lat,
                         'lng'=>$lng,
+                        'admin_share'=>$share,
                         ]);
      
      return redirect()->back()->withSuccess('Updated Successfully');

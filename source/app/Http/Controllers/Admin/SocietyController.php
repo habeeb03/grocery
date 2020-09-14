@@ -44,8 +44,13 @@ class SocietyController extends Controller
             
           $map1 = DB::table('map_API')
              ->first();
-         $map = $map1->map_api_key;        
-        return view('admin.society.societyadd', compact('title','city','admin','logo','map'));    
+         $map = $map1->map_api_key;     
+         $mapset = DB::table('map_settings')
+                 ->first();
+                 
+        $mapbox = DB::table('mapbox')
+                ->first();
+        return view('admin.society.societyadd', compact('title','city','admin','logo','map','mapset','mapbox'));    
         
         
     }
@@ -68,13 +73,7 @@ class SocietyController extends Controller
 
                 ]
         );
-        
-         $urlencode= str_replace(",","",$society);
-                                $urlencode=urlencode("$urlencode"). "\n";
-                                //echo $urlencode= str_replace("",",",$urlencode);
-                                $response=json_decode(file_get_contents("https://maps.googleapis.com/maps/api/geocode/json?address=".$urlencode."&key=AIzaSyDq6a7_3mqLmO1mcnxJMkehXRdvfk1lB1E"));
-                                $lat=$response->results[0]->geometry->location->lat;
-                                $lon=$response->results[0]->geometry->location->lng;
+       
         
     	 $insert = DB::table('society')
                     ->insert([
@@ -106,8 +105,13 @@ class SocietyController extends Controller
                 ->first();
           $map1 = DB::table('map_API')
              ->first();
-         $map = $map1->map_api_key;        
-        return view('admin.society.societyedit', compact('title','city','cities','admin','logo','map'));    
+         $map = $map1->map_api_key;   
+          $mapset = DB::table('map_settings')
+                 ->first();
+                 
+        $mapbox = DB::table('mapbox')
+                ->first();
+        return view('admin.society.societyedit', compact('title','city','cities','admin','logo','map','mapset','mapbox'));    
         
         
     }

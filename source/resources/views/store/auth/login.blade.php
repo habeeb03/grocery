@@ -4,7 +4,7 @@
 	<title>{{$logo->name}} store</title>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="icon" type="image/png" href="{{url('assets/login/images/icons/favicon.ico')}}"/>
+	<link rel="icon" type="image/png" href="{{url($logo->favicon)}}"/>
 	<link rel="stylesheet" type="text/css" href="{{url('assets/login/vendor/bootstrap/css/bootstrap.min.css')}}">
 	<link rel="stylesheet" type="text/css" href="{{url('assets/login/fonts/font-awesome-4.7.0/css/font-awesome.min.css')}}">
 	<link rel="stylesheet" type="text/css" href="{{url('assets/login/vendor/animate/animate.css')}}">
@@ -73,8 +73,10 @@
 						<input class="login100-form-btn" type="submit" value="LOGIN">
 						
 					</div>
-
+					<br>
+                  <p><span style="font-size:12px">If you want to register your store! </span><a href="{{route('store_register')}}"><b style="color:red">Click Here</b></a></p>
 				</form>
+				
 			</div>
 		</div>
 	</div>

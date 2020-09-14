@@ -9,46 +9,6 @@ use Session;
 
 class Minimum_Max_OrderController extends Controller
 {
-    public function orderlist(Request $request)
-    {
-         $title = "Home";
-         $admin_email=Session::get('bamaAdmin');
-    	 $admin= DB::table('admin')
-    	 		   ->where('admin_email',$admin_email)
-    	 		   ->first();
-    	  $logo = DB::table('tbl_web_setting')
-                ->where('set_id', '1')
-                ->first();
-        
-        $city = DB::table('minimum_maximum_order_value')
-                ->get();
-                
-        return view('admin.city.citylist', compact('title','city','admin','logo'));    
-        
-        
-    }
-
-    
-    public function orderedit(Request $request)
-    {
-         $title = "Home";
-         $admin_email=Session::get('bamaAdmin');
-    	 $admin= DB::table('admin')
-    	 		   ->where('admin_email',$admin_email)
-    	 		   ->first();
-    	  $logo = DB::table('tbl_web_setting')
-                ->where('set_id', '1')
-                ->first();
-        $min_max_id = $request->min_max_id;
-        
-        $city = DB::table('minimum_maximum_order_value')
-                
-                ->first();
-                
-        return view('admin.order_amount.editorderamount', compact('title','city','logo','admin'));    
-        
-        
-    }
     
     public function amountupdate(Request $request)
     {
@@ -76,7 +36,7 @@ class Minimum_Max_OrderController extends Controller
     	            
                     ->update([
                         'min_value'=>$min_value,
-                         'min_value'=>$max_value,
+                         'max_value'=>$max_value,
                         ]);
      
          return redirect()->back()->withSuccess('Updated Successfully');

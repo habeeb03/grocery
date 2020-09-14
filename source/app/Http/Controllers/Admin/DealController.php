@@ -24,7 +24,7 @@ class DealController extends Controller
            $deal_p = DB::table('deal_product')
                     ->join('product_varient','deal_product.varient_id','=','product_varient.varient_id')
                     ->join('product','product_varient.product_id','=','product.product_id')
-                    ->paginate(10);
+                    ->get();
         
     	return view('admin.deal_product.list', compact('title',"admin", "logo","deal_p","currentdate"));
     }

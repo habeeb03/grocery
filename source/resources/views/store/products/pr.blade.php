@@ -1,5 +1,13 @@
 @extends('store.layout.app')
-
+<script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
+<style>
+   
+    .material-icons{
+        margin-top:0px !important;
+        margin-bottom:0px !important;
+    }
+</style>
 @section ('content')
  <div class="container-fluid">
           <div class="row">
@@ -31,13 +39,15 @@
              <div class="col-md-12">
               <div class="card">
                 <div class="card-header card-header-primary">
-                  <h4 class="card-title">Store Products</h4>
+                  <h4 class="card-title">Update Stock</h4>
                  </div>
-                     <table class="table">
+                     <div class="container"> <br> 
+                        <table class="display" id="myTable">
                         <thead>
                             <tr>
                                 <th class="text-center">#</th>
                                 <th>Product Name</th>
+                                <th>Id</th>
                                 <th class="text-center">Current Stock</th>
                                 <th class="text-center">Add Stock</th>
                                 <th class="text-right">Actions</th>
@@ -51,6 +61,7 @@
                     <tr>
                         <td class="text-center">{{$i}}</td>
                         <td><p>{{$sel->product_name}}({{$sel->quantity}} {{$sel->unit}})</p></td>
+                        <td><b>{{$sel->p_id}}</b></td>
                         <td>{{$sel->stock}}</td>
                         <td>
                             
@@ -84,12 +95,17 @@
                               @endif
                         </tbody>
                     </table>
-                    <div class="pagination justify-content-end" align="right" style="width:100%;float:right !important">{{$selected->links()}}</div>
+                    </div>
                 </div>
               </div>
             </div>
 			</div>
           </div>
+    <script>
+        $(document).ready( function () {
+    $('#myTable').DataTable();
+} );
+    </script>
 @endsection
 
 

@@ -33,6 +33,7 @@ class LoginController extends Controller
             			    ->first();
 
     if($storeLoginCheck){
+       if($storeLoginCheck->admin_approval==1){  
       if ($password==$storeLoginCheck->password) {
         Session::put('bamaStore', $email);
         Session::save();
@@ -43,7 +44,12 @@ class LoginController extends Controller
       }
     }
     else{
-      return redirect()->route('storeLogin')->withErrors('Email/Password Wrong');
+        return redirect()->route('storeLogin')->withErrors('Your store is under approval.Please wait for Admin approval'); 
+      
+    }
+    }
+    else{
+       return redirect()->route('storeLogin')->withErrors('Email/Password Wrong');
     }
   }
   

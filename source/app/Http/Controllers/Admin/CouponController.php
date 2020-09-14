@@ -20,7 +20,7 @@ class CouponController extends Controller
                 ->where('set_id', '1')
                 ->first();
         $coupon= DB::table('coupon')
-                ->paginate(10);
+                ->get();
         return view('admin.coupon.couponlist',compact("title","coupon",'admin','logo'));
     }
     
@@ -43,8 +43,6 @@ class CouponController extends Controller
     
     public function addcoupon(Request $request)
     {
-        
-        
         $coupon_name = $request->coupon_name;
         $coupon_code = $request->coupon_code;
         $coupon_desc = $request->coupon_desc;
@@ -53,6 +51,7 @@ class CouponController extends Controller
         $cart_value = $request->cart_value;
         $coupon_type = $request->coupon_type;
         $coupon_discount =$request->coupon_discount;
+        $restriction = $request->restriction;
         $discount = str_replace("%",'', $coupon_discount);
 
         
@@ -66,6 +65,7 @@ class CouponController extends Controller
                     'valid_to'=>'required',
                     'valid_from'=>'required',
                     'cart_value'=>'required',
+                    'restriction'=>'required'
                 ],
                 [
                     
@@ -75,6 +75,7 @@ class CouponController extends Controller
                     'valid_to.required'=>'Date Required',
                     'valid_from.required'=>'Date Required',
                     'cart_value.required'=>'Cart value Required',
+                    'restriction.required'=>'Enter Uses Restiction limit'
 
                 ]
         );
@@ -85,9 +86,10 @@ class CouponController extends Controller
                        'coupon_name'=>$coupon_name,
                        'coupon_description'=>$coupon_desc,
                        'coupon_code'=>$coupon_code,
-                       'valid_to'=>$valid_to,
-                       'valid_from'=>$valid_from,
+                       'start_date'=>$valid_to,
+                       'end_date'=>$valid_from,
                        'type'=>$coupon_type,
+                       'uses_restriction'=>$restriction,
                        'amount'=>$discount,
                        'cart_value'=>$cart_value]);
      
@@ -119,11 +121,12 @@ class CouponController extends Controller
         $coupon_id = $request->coupon_id;
         $coupon_name = $request->coupon_name;
         $coupon_code = $request->coupon_code;
+        $coupon_type = $request->coupon_type;
         $coupon_desc = $request->coupon_desc;
         $valid_to = $request->valid_to;
         $valid_from = $request->valid_from;
         $cart_value = $request->cart_value;
-
+        $restriction = $request->restriction;
         
       $this->validate(
             $request,
@@ -135,6 +138,7 @@ class CouponController extends Controller
                     'valid_to'=>'required',
                     'valid_from'=>'required',
                     'cart_value'=>'required',
+                    'restriction'=>'required'
                 ],
                 [
                     
@@ -144,6 +148,7 @@ class CouponController extends Controller
                     'valid_to.required'=>'Date Required',
                     'valid_from.required'=>'Date Required',
                     'cart_value.required'=>'Cart value Required',
+                    'restriction.required'=>'Enter Uses Restiction limit'
 
                 ]
         );
@@ -153,9 +158,11 @@ class CouponController extends Controller
                       'coupon_name'=>$coupon_name,
                        'coupon_description'=>$coupon_desc,
                        'coupon_code'=>$coupon_code,
-                       'valid_to'=>$valid_to,
-                       'valid_from'=>$valid_from,
-                       'cart_value'=>$cart_value]);
+                       'start_date'=>$valid_to,
+                       'type'=>$coupon_type,
+                       'end_date'=>$valid_from,
+                       'cart_value'=>$cart_value,
+                       'uses_restriction'=>$restriction]);
 
         if($update){
 

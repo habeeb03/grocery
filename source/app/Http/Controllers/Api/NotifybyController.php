@@ -41,11 +41,11 @@ class NotifybyController extends Controller
                 'app'=>$app]);
         
          if($notifyby){
-            $message = array('status'=>'1', 'message'=>'Notifyby', 'data'=>$notifyby);
+            $message = array('status'=>'1', 'message'=>'Updated Successfully', 'data'=>$notifyby);
             return $message;
             }
         else{
-            $message = array('status'=>'0', 'message'=>'Not Found', 'data'=>[]);
+            $message = array('status'=>'0', 'message'=>'Already Updated', 'data'=>[]);
             return $message;
         }
     }

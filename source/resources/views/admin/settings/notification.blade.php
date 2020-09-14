@@ -31,7 +31,7 @@
             <div class="col-md-12">
               <div class="card">
                 <div class="card-header card-header-primary">
-                  <h4 class="card-title">Notification</h4>
+                  <h4 class="card-title">Notification to App Users</h4>
                   <form class="forms-sample" action="{{route('adminNotificationSend')}}" method="post" enctype="multipart/form-data">
                       {{csrf_field()}}
                 </div>
@@ -50,7 +50,33 @@
                         </div>
                       </div>
                     </div>
-                    <button type="submit" class="btn btn-primary pull-center">Send Notification</button>
+                    <button type="submit" class="btn btn-primary pull-center">Send Notification to App Users</button>
+                    <div class="clearfix"></div>
+                  </form>
+                </div>
+              </div>
+               <div class="card">
+                <div class="card-header card-header-primary">
+                  <h4 class="card-title">Notification to Store</h4>
+                  <form class="forms-sample" action="{{route('adminNotificationSendtostore')}}" method="post" enctype="multipart/form-data">
+                      {{csrf_field()}}
+                </div>
+                <div class="card-body">
+                     <div class="row">
+                       <div class="col-md-12">
+                        <div class="form-group">
+                          <label>Title</label>
+                          <input type="text" name="notification_title" class="form-control">
+                        </div>
+                      </div>
+                       <div class="col-md-12">
+                        <div class="form-group">
+                          <label>Message</label>
+                          <textarea name="notification_text" class="form-control"></textarea>
+                        </div>
+                      </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary pull-center">Send Notification to Store</button>
                     <div class="clearfix"></div>
                   </form>
                 </div>

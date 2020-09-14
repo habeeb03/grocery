@@ -42,15 +42,7 @@ sup {
                       {{csrf_field()}}
                 </div>
                 <div class="card-body">
-                     <div class="row">
-                      <div class="col-md-6">
-                        <div class="form-group">
-                          <label for="exampleInputName1">MRP</label>
-                          <input type="text" class="form-control" id="exampleInputName1" name="mrp" value="{{$product->mrp}}" placeholder="Enter MRP">
-                        </div>
-                      </div>
-
-                    </div>
+                   
                      <div class="row">
                       <div class="col-md-6">
                         <div class="form-group">
@@ -63,17 +55,25 @@ sup {
                     <div class="row">
                       <div class="col-md-6">
                         <div class="form-group">
-                          <label class="bmd-label-floating">Unit</label>
-                          <input type="text" name="unit" class="form-control" value="{{$product->unit}}">
+                          <label class="bmd-label-floating">Unit (G/KG/Ltrs/Ml)</label>
+                          <input type="text" name="unit"  pattern="[A-Za-z]{1-10}" title="KG/G/Ltrs/Ml etc" class="form-control" value="{{$product->unit}}">
                         </div>
                       </div>
                     </div>
-                    
+                      <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="exampleInputName1">MRP</label>
+                          <input  type="number" step="0.01" class="form-control" id="exampleInputName1" name="mrp" value="{{$product->base_mrp}}" placeholder="Enter MRP">
+                        </div>
+                      </div>
+
+                    </div>
                     <div class="row">
                       <div class="col-md-6">
                         <div class="form-group">
                           <label class="bmd-label-floating">Price</label>
-                          <input type="text" name="price" class="form-control" value="{{$product->price}}">
+                          <input  type="number" step="0.01" name="price" class="form-control" value="{{$product->base_price}}">
                         </div>
                       </div>
                     </div>

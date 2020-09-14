@@ -1,8 +1,9 @@
 @extends('admin.layout.app')
+<script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
+
 <style>
-    .btn{
-        height:27px !important;
-    }
+   
     .material-icons{
         margin-top:0px !important;
         margin-bottom:0px !important;
@@ -41,7 +42,8 @@
 <div class="card-header card-header-primary">
       <h4 class="card-title ">Store Payout Request</h4>
     </div>
-<table class="table">
+<div class="container"> <br> 
+<table class="display" id="myTable">
     <thead>
         <tr>
             <th class="text-center">#</th>
@@ -98,7 +100,7 @@
                       @endif  
                     </tbody>
 </table>
-<div class="pagination justify-content-end" align="right" style="width:100%;float:right !important">{{$total_earnings->links()}}</div>
+</div>
 </div>
 </div>
 </div>
@@ -125,7 +127,7 @@
                       <div class="col-md-6" align="center">
                         <div class="form-group">
                         <label>Enter Amount</label>        
-        		     	<input class="form-control" type="number" min="10" value="{{$total_earning->payout_amt}}" step ="0.01" @if($total_earning->paid != NULL)
+        		     	<input class="form-control" type="number" min="10" step="0.01" value="{{$total_earning->payout_amt}}" step ="0.01" @if($total_earning->paid != NULL)
                                 max="{{$total_earning->sumprice - $total_earning->paid }}"
                                 @else
                                 max="{{$total_earning->sumprice}}"
@@ -142,5 +144,10 @@
         	</div>
         </div>
  @endforeach
+ <script>
+        $(document).ready( function () {
+    $('#myTable').DataTable();
+} );
+    </script>
     @endsection
 </div>

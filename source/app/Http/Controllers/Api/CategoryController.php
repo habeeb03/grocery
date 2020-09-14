@@ -63,9 +63,28 @@ class CategoryController extends Controller
       
   public function cat_product(Request $request)
     {
-     $cat_id =$request->cat_id;   
-       $prod =  DB::table('product')
-          ->where('cat_id', $cat_id)
+     $cat_id =$request->cat_id;  
+       $lat = $request->lat;
+       $lng = $request->lng;
+        $cityname = $request->city;
+       $city = ucfirst($cityname);
+       $nearbystore = DB::table('store')
+                    ->select('del_range','store_id',DB::raw("6371 * acos(cos(radians(".$lat . ")) 
+                    * cos(radians(store.lat)) 
+                    * cos(radians(store.lng) - radians(" . $lng . ")) 
+                    + sin(radians(" .$lat. ")) 
+                    * sin(radians(store.lat))) AS distance"))
+                  ->where('store.del_range','>=','distance')
+                  ->orderBy('distance')
+                  ->first();
+    if($nearbystore->del_range >= $nearbystore->distance)  {           
+       $prod =  DB::table('store_products')
+                 ->join ('product_varient', 'store_products.varient_id', '=', 'product_varient.varient_id')
+                  ->join ('product', 'product_varient.product_id', '=', 'product.product_id')
+          ->where('product.cat_id', $cat_id)
+          ->where('store_products.store_id', $nearbystore->store_id)
+          ->where('store_products.price','!=',NULL)
+          ->where('product.hide',0)
           ->get();
 
         if(count($prod)>0){
@@ -77,8 +96,13 @@ class CategoryController extends Controller
 
                 $app = json_decode($prods->product_id);
                 $apps = array($app);
-                $app = DB::table('product_varient')
-                        ->whereIn('product_id', $apps)
+                $app =  DB::table('store_products')
+                 ->join ('product_varient', 'store_products.varient_id', '=', 'product_varient.varient_id')
+                 ->Leftjoin('deal_product','product_varient.varient_id','=','deal_product.varient_id')
+                         ->select('store_products.store_id','store_products.stock','product_varient.varient_id', 'product_varient.description', 'store_products.price', 'store_products.mrp', 'product_varient.varient_image','product_varient.unit','product_varient.quantity','deal_product.deal_price', 'deal_product.valid_from', 'deal_product.valid_to')
+                         ->where('store_products.store_id', $nearbystore->store_id)
+                        ->whereIn('product_varient.product_id', $apps)
+                        ->where('store_products.price','!=',NULL)
                         ->get();
                         
                 $result[$i]->varients = $app;
@@ -93,6 +117,11 @@ class CategoryController extends Controller
             $message = array('status'=>'0', 'message'=>'Products not found', 'data'=>[]);
             return $message;
         }
+        }
+       else{
+           $message = array('status'=>'2', 'message'=>'No Products Found Nearby', 'data'=>[]);
+            return $message; 
+       }
      
     }   
     
@@ -178,8 +207,27 @@ class CategoryController extends Controller
      public function varient(Request $request)
     {
         $prod_id = $request->product_id;
-        $varient= DB::table('product_varient')
+         $lat = $request->lat;
+       $lng = $request->lng;
+        $cityname = $request->city;
+       $city = ucfirst($cityname);
+       $nearbystore = DB::table('store')
+                    ->select('del_range','store_id',DB::raw("6371 * acos(cos(radians(".$lat . ")) 
+                    * cos(radians(store.lat)) 
+                    * cos(radians(store.lng) - radians(" . $lng . ")) 
+                    + sin(radians(" .$lat. ")) 
+                    * sin(radians(store.lat))) AS distance"))
+                  ->where('store.del_range','>=','distance')
+                  ->orderBy('distance')
+                  ->first();
+    if($nearbystore->del_range >= $nearbystore->distance)  {                
+        $varient= DB::table('store_products')
+                 ->join ('product_varient', 'store_products.varient_id', '=', 'product_varient.varient_id')
+                 ->Leftjoin('deal_product','product_varient.varient_id','=','deal_product.varient_id')
+                         ->select('store_products.store_id','store_products.stock','product_varient.varient_id', 'product_varient.description', 'store_products.price', 'store_products.mrp', 'product_varient.varient_image','product_varient.unit','product_varient.quantity','deal_product.deal_price', 'deal_product.valid_from', 'deal_product.valid_to')
                 ->where('product_id',$prod_id)
+                ->where('store_products.price','!=',NULL)
+                ->where('store_products.store_id',$nearbystore->store_id)
                 ->get();
         if(count($varient)>0){        
           $message = array('status'=>'1', 'message'=>'varients', 'data'=>$varient);
@@ -188,7 +236,12 @@ class CategoryController extends Controller
         else{
             $message = array('status'=>'0', 'message'=>'data not found', 'data'=>[]);
             return $message;
-        }        
+        } 
+    }
+       else{
+           $message = array('status'=>'2', 'message'=>'No Products Found Nearby', 'data'=>[]);
+            return $message; 
+       } 
                 
     }
     
@@ -196,12 +249,32 @@ class CategoryController extends Controller
      public function dealproduct(Request $request)
     {
         $d = Carbon::Now();
+       $lat = $request->lat;
+       $lng = $request->lng;
+       $cityname = $request->city;
+       $city = ucfirst($cityname);
+       
+       $nearbystore = DB::table('store')
+                    ->select('del_range','store_id',DB::raw("6371 * acos(cos(radians(".$lat . ")) 
+                    * cos(radians(store.lat)) 
+                    * cos(radians(store.lng) - radians(" . $lng . ")) 
+                    + sin(radians(" .$lat. ")) 
+                    * sin(radians(store.lat))) AS distance"))
+                  ->where('store.del_range','>=','distance')
+                  ->orderBy('distance')
+                  ->first();
+       if($nearbystore->del_range >= $nearbystore->distance)  {        
         $deal_p= DB::table('deal_product')
-                ->join('product_varient', 'deal_product.varient_id', '=', 'product_varient.varient_id')
+                ->join('store_products', 'deal_product.varient_id', '=', 'store_products.varient_id')
+                ->join('product_varient', 'store_products.varient_id', '=', 'product_varient.varient_id')
                 ->join('product', 'product_varient.product_id', '=', 'product.product_id')
-                ->select('deal_product.deal_price', 'product_varient.varient_image', 'product_varient.quantity','product_varient.unit', 'product_varient.mrp','product_varient.price','product_varient.description' ,'product.product_name','product.product_image','product_varient.varient_id','product.product_id','deal_product.valid_to','deal_product.valid_from')
+                ->select('store_products.store_id','store_products.stock','deal_product.deal_price as price', 'product_varient.varient_image', 'product_varient.quantity','product_varient.unit', 'store_products.mrp','product_varient.description' ,'product.product_name','product.product_image','product_varient.varient_id','product.product_id','deal_product.valid_to','deal_product.valid_from')
+                ->groupBy('store_products.store_id','store_products.stock','deal_product.deal_price', 'product_varient.varient_image', 'product_varient.quantity','product_varient.unit', 'store_products.mrp','product_varient.description' ,'product.product_name','product.product_image','product_varient.varient_id','product.product_id','deal_product.valid_to','deal_product.valid_from')
+                ->where('store_products.store_id',$nearbystore->store_id)
                 ->whereDate('deal_product.valid_from','<=',$d->toDateString())
                 ->WhereDate('deal_product.valid_to','>',$d->toDateString())
+                ->where('store_products.price','!=',NULL)
+                ->where('product.hide',0)
                 ->get();
           
           
@@ -227,19 +300,42 @@ class CategoryController extends Controller
         else{
             $message = array('status'=>'0', 'message'=>'Products not found', 'data'=>[]);
             return $message;
-        }        
+        }     
+       }
+       else{
+           $message = array('status'=>'2', 'message'=>'No Products Found Nearby', 'data'=>[]);
+            return $message; 
+       }
 
     }
     
     
        public function top_six(Request $request){
-      $topsix = DB::table('orders')
-                  ->join ('store_orders', 'orders.cart_id', '=', 'store_orders.order_cart_id') 
-                  ->join ('product_varient', 'store_orders.varient_id', '=', 'store_orders.varient_id')
+          $lat = $request->lat;
+       $lng = $request->lng;
+        $cityname = $request->city;
+       $city = ucfirst($cityname);
+       $nearbystore = DB::table('store')
+                    ->select('del_range','store_id',DB::raw("6371 * acos(cos(radians(".$lat . ")) 
+                    * cos(radians(store.lat)) 
+                    * cos(radians(store.lng) - radians(" . $lng . ")) 
+                    + sin(radians(" .$lat. ")) 
+                    * sin(radians(store.lat))) AS distance"))
+                  ->where('store.del_range','>=','distance')
+                  ->orderBy('distance')
+                  ->first(); 
+    if($nearbystore->del_range >= $nearbystore->distance)  {                 
+      $topsix = DB::table('store_products')
+                 ->join ('product_varient', 'store_products.varient_id', '=', 'product_varient.varient_id')
                   ->join ('product', 'product_varient.product_id', '=', 'product.product_id')
+                  ->Leftjoin ('store_orders', 'product_varient.varient_id', '=', 'store_orders.varient_id') 
+                  ->Leftjoin ('orders', 'store_orders.order_cart_id', '=', 'orders.cart_id')
                   ->join ('categories', 'product.cat_id','=','categories.cat_id')
                   ->select('categories.title', 'categories.image', 'categories.description','categories.cat_id',DB::raw('count(store_orders.varient_id) as count'))
                   ->groupBy('categories.title', 'categories.image', 'categories.description','categories.cat_id')
+                   ->where('store_products.store_id', $nearbystore->store_id)
+                   ->where('store_products.price','!=',NULL)
+                   ->where('product.hide',0)
                   ->orderBy('count','desc')
                   ->limit(6)
                   ->get();
@@ -250,8 +346,54 @@ class CategoryController extends Controller
         else{
         	$message = array('status'=>'0', 'message'=>'Nothing in Top Six', 'data'=>[]);
         	return $message;
-        }          
-  }    
-  
+        } 
+    }
+       else{
+           $message = array('status'=>'2', 'message'=>'No Products Found Nearby', 'data'=>[]);
+            return $message; 
+       }
+  }   
+ public function homecat(Request $request){
+        $lat = $request->lat;
+       $lng = $request->lng;
+      
+       $nearbystore = DB::table('store')
+                    ->select('del_range','store_id',DB::raw("6371 * acos(cos(radians(".$lat . ")) 
+                    * cos(radians(store.lat)) 
+                    * cos(radians(store.lng) - radians(" . $lng . ")) 
+                    + sin(radians(" .$lat. ")) 
+                    * sin(radians(store.lat))) AS distance"))
+                  ->where('store.del_range','>=','distance')
+                  ->orderBy('distance')
+                  ->first(); 
+    if($nearbystore->del_range >= $nearbystore->distance)  {      
+      $category = DB::table('tbl_top_cat')
+    	          ->join('categories','tbl_top_cat.cat_id','=','categories.cat_id')
+    	          ->join ('product', 'categories.cat_id', '=', 'product.cat_id')
+    	          ->join ('product_varient', 'product.product_id', '=', 'product_varient.product_id')
+    	          ->join ('store_products', 'product_varient.varient_id', '=', 'store_products.varient_id')
+    	          ->select('categories.cat_id','categories.title','categories.image')
+    	          ->groupBy('categories.cat_id','categories.title','categories.image')
+    	          ->where('store_products.store_id', $nearbystore->store_id)
+                  ->where('store_products.price','!=',NULL)
+                   ->where('product.hide',0)
+                   ->orderBy('tbl_top_cat.cat_rank','ASC')
+    	          ->get();
+    	          
+    	          
+       if(count($category)>0){
+        	$message = array('status'=>'1', 'message'=>'Home Categories', 'data'=>$category);
+        	return $message;
+        }
+        else{
+        	$message = array('status'=>'0', 'message'=>'Nothing in Home Category', 'data'=>[]);
+        	return $message;
+        } 
+       }
+       else{
+           $message = array('status'=>'2', 'message'=>'No Products Found Nearby', 'data'=>[]);
+            return $message; 
+       }
+ }
     
 }

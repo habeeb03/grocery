@@ -63,27 +63,25 @@
                       <div class="col-md-4">
                         <div class="form-group">
                           <!--<label class="bmd-label-floating">Valid From</label>-->
-                          <p class="card-description">Valid To</p>
-                          <input type="date" name="valid_to" class="form-control">
+                          <p class="card-description">Start Date</p>
+                          <input type="datetime-local" name="valid_to" class="form-control">
                         </div>
                       </div>
                       <div class="col-md-4">
                         <div class="form-group">
-                          <!--<label class="bmd-label-floating">Valid To</label>-->
-                          <p class="card-description">Valid From</p>
-                          <input type="date" name="valid_from" class="form-control">
+                          <p class="card-description">End Date</p>
+                          <input type="datetime-local" name="valid_from" class="form-control">
                         </div>
                       </div>
                       <div class="col-md-4">
                         <div class="form-group">
-                          <!--<label class="bmd-label-floating">Minimum Cart Value</label>-->
                           <p class="card-description">Minimum Cart Value</p>
                           <input type="number" name="cart_value" class="form-control">
                         </div>
                       </div>
-                    </div>
+                    </div><br>
                     <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                     <div class="form-group">
                     <label for="exampleFormControlSelect3">Discount</label>
                     <select class="form-control form-control-sm img" id="exampleFormControlSelect3" name="coupon_type">
@@ -95,6 +93,12 @@
                      <input type="text" class="form-control des_price" id="exampleInputName1" name="coupon_discount" placeholder="Enter discount">
                     </div>
                 </div>
+                  <div class="col-md-6">
+                        <div class="form-group">
+                           <label for="exampleFormControlSelect3">Uses Restriction</label>
+                          <input type="text" name="restriction" class="form-control" placeholder="maximum uses per user" required>
+                        </div>
+                      </div>
             </div>
                     <button type="submit" class="btn btn-primary pull-center">Submit</button>
                     <div class="clearfix"></div>
